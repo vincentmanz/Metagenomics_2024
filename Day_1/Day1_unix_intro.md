@@ -232,7 +232,7 @@ Let's list the contents of the folder. What happened to `myfolder`?
 ---
 
 # directories and files structure 
-
+```bash
 /scratch/project_202406/COURSE_FILES/
                             |_______/RAWDATA/TARAOCEAN/
                                                 |_______/FASTQC/
@@ -290,3 +290,4 @@ Let's list the contents of the folder. What happened to `myfolder`?
 #                        |_______/Sample03_trimmed.fastq
 #                        |_______/Sample04_trimmed.fastq
             |_______/RESAMPLED/
+```
