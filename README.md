@@ -9,8 +9,7 @@ The course will be held in English.
 The course unix server will be provided by the course organizers.
 
 # Schedule
-The course will be held in PUCE in .... 
-
+The course will be held in Pontificia Universidad Católica del Ecuador, The course is starting at 9:00 and finish at 17:00.   
 
 ## Day 1
 
@@ -19,14 +18,12 @@ The course will be held in PUCE in ....
 * Read based analysis
 
 ## Day 2
-2024-06-04 9-16
 
 * Read based analysis with MEGAN
 * Read based data analysis in R
 * Assembly
 
 ## Day 3
-2024-06-05 9-16
 
 * Assembly QC
 * Genome-resolved metagenomics - Anvio
