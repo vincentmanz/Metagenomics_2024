@@ -231,6 +231,32 @@ Let's list the contents of the folder. What happened to `myfolder`?
 
 ---
 
+## Environements
+### What are Environments?
+Environments in Python are isolated workspaces that contain a specific collection of packages and dependencies. By using environments, you can ensure that your code runs the same way it was developed, eliminating the “it works on my machine” problem.
+
+Writing code is just one part of software development. To make your code reliably run on different machines, managing environments is crucial. This part is an introduction to creating reproducible environments in Python using conda, environment.yaml files, and some additional tips and tricks.
+
+### Mamba
+[Mamba](https://github.com/mamba-org/mamba) is a reimplementation of the conda package manager in C++. It advertises much faster dependency solving compared to conda. It can be used as a base python environment manager instead of conda and can be installed from [here](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html).
+
+```bash
+
+mamba create -n new_env
+
+mamba activate new_env
+
+mamba deactivate 
+
+```
+
+
+
+
+
+
+
+
 # directories and files structure 
 ```bash
 /scratch/project_202406/COURSE_FILES/
