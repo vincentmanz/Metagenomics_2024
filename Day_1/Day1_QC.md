@@ -232,7 +232,9 @@ unzip HOST_MAPPING/Triatoma_infestans.fasta.zip
 ```
 
 ### Mapping the reads to the host genome
-note: switch to [Sambamba](https://lomereiter.github.io/sambamba/) 
+
+note: alternative software (faster) [Sambamba](https://lomereiter.github.io/sambamba/) 
+
 
 ```bash
 NUM_CORES=60
