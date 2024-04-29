@@ -14,8 +14,8 @@ Eberhard, F.E., Klimpel, S., Guarneri, A.A. et al. Exposure to Trypanosoma paras
 ***Our results facilitate a deeper understanding of the processes that take place in the intestinal tract of triatomine vectors during colonisation by trypanosomal parasites and highlight the influential aspects of pathogen-microbiota interactions. In particular, the mostly unexplored metabolic capacities of the insect vector’s microbiome are clearer, underlining its role in the transmission of Chagas disease.***
 
 
-![communities](http://url/to/img.png)
-![pangenomes](http://url/to/img.png)
+![communities](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_1/communities.png)
+![pangenomes](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_1/pangenomes.png)
 
 
 The following link contains FTP URLs for each raw data file for 30 samples:
