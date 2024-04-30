@@ -1,3 +1,13 @@
+# Day 2
+
+| Time      | Activity                      | Slides                                | Hands-on                                                |
+|-----------|-------------------------------|---------------------------------------|---------------------------------------------------------|
+| Morning   | Read Base analysis            |                                       |       [Link here](Readbased.md)                            | 
+| Afternoon | Assembly                      | [Link here](linkhere.pdf)                | [Link here](Day2/Day2_assembly.md) |
+
+
+
+
 # Metagenomic read based profiles
 
 In this tutorial we will explore and analyse the results of kraken2 read profiling data using the re-estimatd abundances of bracken. These exercises are meant to show how to conceptually approach your data analysis but there are many more and different ways to explore your data. The most important thing to keep in mind is that you have to understand your own data and analyses. One way to achieve this is to perform visual explorations that help you to judge whether the data are appropriate for your question.

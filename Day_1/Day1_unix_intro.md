@@ -231,6 +231,11 @@ Let's list the contents of the folder. What happened to `myfolder`?
 
 ---
 
+
+## The R syntax
+
+For the R syntax please have a look at: [Data Carpentry](https://datacarpentry.org/R-genomics/01-intro-to-R.html).
+
 ## Environements
 ### What are Environments?
 Environments in Python are isolated workspaces that contain a specific collection of packages and dependencies. By using environments, you can ensure that your code runs the same way it was developed, eliminating the “it works on my machine” problem.
@@ -239,6 +244,8 @@ Writing code is just one part of software development. To make your code reliabl
 
 ### Mamba
 [Mamba](https://github.com/mamba-org/mamba) is a reimplementation of the conda package manager in C++. It advertises much faster dependency solving compared to conda. It can be used as a base python environment manager instead of conda and can be installed from [here](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html).
+
+For more information please look at the lesson in [Data Carpentry](https://carpentries-incubator.github.io/introduction-to-conda-for-data-scientists/02-working-with-environments/index.html)
 
 ```bash
 
@@ -312,3 +319,9 @@ mamba deactivate
 #                        |_______/Sample04_trimmed.fastq
             |_______/RESAMPLED/
 ```
+
+
+
+- *The materials used in this lesson are adapted from work that is Copyright © Data Carpentry (http://datacarpentry.org/). 
+All Data Carpentry instructional material is made available under the [Creative Commons Attribution license](https://creativecommons.org/licenses/by/4.0/) (CC BY 4.0).*
+
