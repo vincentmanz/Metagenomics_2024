@@ -23,7 +23,7 @@ K-mer based methods count the k-mer frequency of the reads, and compare it to a 
 In order to run Kraken2, one has to build corresponding database first, the command to build the standard Kraken2 database is kraken2-build –standard –threads 24 –db kraken.db. This will download NCBI taxonomic information, as well as the complete genomes in RefSeq for the bacterial, archaeal, and viral domains, along with the human genome and a collection of known vectors (UniVec_Core). The build process is the most time-consuming, so we are not going to perform it in this workshop. We will link to prebuild databases are [here](https://benlangmead.github.io/aws-indexes/k2).
 
 ```bash
-wegt https://genome-idx.s3.amazonaws.com/kraken/k2_nt_20231129.tar.gz
+wget https://genome-idx.s3.amazonaws.com/kraken/k2_nt_20231129.tar.gz
 
 ```
 
@@ -63,11 +63,13 @@ Finally, we are going to combine the abundance estimation for each sample into a
 ```bash 
 HELPER/combine_bracken_outputs.py --files /READBASED/SRR15276*.bracken -o READBASED/merged_abundance_species.txt
 ```
+This produces 2 files in the same directory where the input files are (in our example ./bracken):
+
+<span style="color:blue">merged_rel_abund.csv</span>: contains table for all samples with bracken relative abundances and taxonimic assignments
+<span style="color:blue">merged_read_numbers.csv</span>: contains table for all samples with bracken read counts and taxonimic assignments
+
+merged_rel_abund.csv: contains table for all samples with bracken relative abundances and taxonimic assignments
+merged_read_numbers.csv: contains table for all samples with bracken read counts and taxonimic assignments
 
 
 ### Differential abundance analysis
-
-
-
-
-
