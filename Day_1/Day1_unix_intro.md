@@ -252,11 +252,6 @@ mamba deactivate
 
 
 
-
-
-
-
-
 # directories and files structure 
 ```bash
 /scratch/project_202406/COURSE_FILES/

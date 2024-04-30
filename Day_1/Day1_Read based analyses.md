@@ -70,4 +70,3 @@ This produces 2 files in the same directory where the input files are:
 - *merged_read_numbers.csv*: contains table for all samples with bracken read counts and taxonimic assignments
 
 
-### Differential abundance analysis
