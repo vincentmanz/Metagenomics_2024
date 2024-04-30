@@ -218,6 +218,24 @@ Look how well the trimming went.
 
 # Removing host reads
 
+
+For samples that are suppected to have very high levels of host material, it is worth considering adding a step in the library prep stage to remove host material. 
+Even with host depletion at the library prep stage, it is important to remove leftover host reads bioinformatically.
+
+A [publication](https://doi.org/10.1099/mgen.0.000393) has done a very thorough study using different software/approaches to detect/remove human reads in microbial datasets. If we are to pick one method, Bowtie2 performs the best overall to remove human reads from the microbial datasets. So, we have chosen to use bowtie2 to remove the host DNA from our dataset.
+
+
+
+
+![host1](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_1/rmhost1.gif)
+![host2](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_1/rmhost2.gif)
+![host3](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_1/rmhost3.gif)
+
+
+Based on the findings from the above paper, we are going to use Bowtie2 to remove host DNA. The basic idea is to map/align the preprocessed reads to the bovine reference genome. Then we extract the reads that do not align for downstream analysis.
+
+
+
 ### Downloading the host genome
 
 We will use the genome of the kissing bug, Triatoma infestans GCA_011037195.1 [Genome](https://www.ncbi.nlm.nih.gov/datasets/genome/GCA_011037195.1/).

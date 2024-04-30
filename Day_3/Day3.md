@@ -147,12 +147,12 @@ metaxa2_dc -o METAXA/metaxa_species.txt METAXA/*level_7.txt
 
 # With nf-core MAGs
 
-we are using a pipeline called [MAGs](https://nf-co.re/mag/2.5.4) to assemble and bin the metagenomic data.
+We are using a pipeline called [MAGs](https://nf-co.re/mag/2.5.4) to assemble and bin the metagenomic data.
+
+Please find an example here: 
 
 [Installation](https://nf-co.re/docs/usage/installation)
 
-data/Trypanosoma_exposure/HOST_MAPPING/ncbi_dataset/data/GCA_011037195.1/GCA_011037195.1_UVM_Tinf_1.0_genomic.fna \
-      --host_removal_verysensitive True \
 
 ```bash
 nf-core download mags
@@ -200,8 +200,3 @@ nextflow run ~/nf-core/nf-core-mag_2.5.4/2_5_4/ \
       --refine_bins_dastool TRUE  \
       --run_gunc FALSE \
       --ancient_dna FALSE
-
-
-
-
-
