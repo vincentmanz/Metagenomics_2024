@@ -2,9 +2,7 @@
 
 The first question to answer in a metagenomics study is who is there. It is to identify the members of the microbial community. There are two approaches that could be used to achieve this goal: the first is to utilize the reads and the other is to assemble the metagenomes before using homology search to the database. We will look at the read based approach in this section. There are three main algorithms to classify the reads to taxa: the first is to do homology search (for example, using blast: MEGAN) of the reads against huge reference databases, the second is k-mer based and the third is marker gene based. In this step, we are going to focus on the k-mer based classification usually more accurate and faster to compute. 
 
-![benchmark_calssifier](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_1/pictures/benchmark_calssifier.jpg)
-
-![benchmark_calssifier_abundance](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_1/pictures/benchmark_calssifier_abundance.jpg)
+![benchmark_calssifier](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_1/pictures/benchmark_calssifier.jpg) ![benchmark_calssifier_abundance](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_1/pictures/benchmark_calssifier_abundance.jpg)
 
 [Reference](https://doi.org/10.1016/j.cell.2019.07.010)
 
