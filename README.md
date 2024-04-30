@@ -1,3 +1,4 @@
+![microbiome](https://github.com/vincentmanz/Metagenomics_2024/blob/main/microbiom.jpg)
 
 # Metagenomic course 2024
 

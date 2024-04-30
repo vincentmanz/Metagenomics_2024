@@ -63,15 +63,11 @@ Finally, we are going to combine the abundance estimation for each sample into a
 ```bash 
 HELPER/combine_bracken_outputs.py --files /READBASED/SRR15276*.bracken -o READBASED/merged_abundance_species.txt
 ```
-This produces 2 files in the same directory where the input files are (in our example ./bracken):
 
-<span style="color:blue">merged_rel_abund.csv</span>
+This produces 2 files in the same directory where the input files are:
 
-: contains table for all samples with bracken relative abundances and taxonimic assignments
-<span style="color:blue">merged_read_numbers.csv</span>: contains table for all samples with bracken read counts and taxonimic assignments
-
-merged_rel_abund.csv: contains table for all samples with bracken relative abundances and taxonimic assignments
-merged_read_numbers.csv: contains table for all samples with bracken read counts and taxonimic assignments
+- *merged_rel_abund.csv*: contains table for all samples with bracken relative abundances and taxonimic assignments
+- *merged_read_numbers.csv*: contains table for all samples with bracken read counts and taxonimic assignments
 
 
 ### Differential abundance analysis
