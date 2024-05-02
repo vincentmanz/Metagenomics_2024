@@ -34,7 +34,7 @@ Alternatively [SPADES](https://github.com/ablab/spades) has specific pipelines f
 mamba activate MEGAHIT_env
 mkdir ASSEMBLIES
 
-for i in {518..547}
+for i in {518..547l.}
 do
     spades   \
         --meta \

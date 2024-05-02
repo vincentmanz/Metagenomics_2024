@@ -47,14 +47,16 @@ done
 
 What Kraken2 has produced is the classification of each read to a taxonomic rank. This result needs to be further refined to generate species (genus, phylum) level abundance table for downstream statistical analysis. This process needs to be done properly. Kraken2 only classifies the reads to the Lowest Common Ancestor (LCA) because there are many genomes present in the database have large fractions of their sequences identical to other genomes. This leads to the result that for well-populated clades with low genome diversity, Kraken only reports species-level assignments for reads from unique regions, while for many species the majority of reads might be classified at a higher level of the taxonomy and the number of reads classified directly to a species may be far lower than the actual number present. Therefore, Kraken’s raw read assignments cannot be directly translated into species- or strain-level abundance estimates. Bracken has been designed to perform sophisticated probabilistically re-distribution of reads to estimate the abundance.
 
-Bracken takes the output from Kraken and estimate the abundance at user specified level: species, genus, or phylum.
+[Bracken](https://github.com/jenniferlu717/Bracken) takes the output from Kraken and estimate the abundance at user specified level: species, genus, or phylum.
 
 ```bash
 mkdir READBASED
 
-for i in {518..547}
+
+for i in {518..521}
 do
-    bracken -d /media/vincent/Data/DB/kraken/k2_standard_20240112/ --threads 60 -i READBASED/SRR15276"$i".kraken_report.out -o READBASED/SRR15276"$i".bracken
+    sed -i '/Viruses/,$d'  TEMP/SRR15276"$i".kraken_report.out  # remove viruses / bug in the DB formatting
+    bracken -d READBASED/k2_standard_20240112/ -t 10 -i TEMP/SRR15276"$i".kraken_report.out -o TEMP/SRR15276"$i".bracken
 done
 ```
 
@@ -63,7 +65,7 @@ This step runs very fast, a few seconds. It generates two files for each sample 
 Finally, we are going to combine the abundance estimation for each sample into an abundance table.
 
 ```bash 
-HELPER/combine_bracken_outputs.py --files /READBASED/SRR15276*.bracken -o READBASED/merged_abundance_species.txt
+python3 HELPER/merge_profiling_reports.py --files TEMP/SRR152765*.bracken -o merged
 ```
 
 This produces 2 files in the same directory where the input files are:

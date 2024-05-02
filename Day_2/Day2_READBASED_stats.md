@@ -33,7 +33,7 @@ First we need to load our data. Usually the biggest bottleneck between raw data 
 Let’s first load the relative abundance table of the bracken results.
 
 ```R
-merge_rel_abund <- read_csv(file = "READBASED/merged_rel_abund.csv") 
+merge_rel_abund <- read.csv(file = "READBASED/merged_rel_abund.csv", sep = " ") 
 
 meta <- read_csv(file = "DATA/tryp_metadata.csv")
 ```
