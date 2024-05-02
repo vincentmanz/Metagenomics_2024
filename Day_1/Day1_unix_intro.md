@@ -3,9 +3,9 @@
 | Time      | Activity                      | Slides                                | Hands-on                                                |
 |-----------|-------------------------------|---------------------------------------|---------------------------------------------------------|
 | Morning   | Introduction                  | [Link here](Introduction.pdf)||
-| Morning   | Introduction to Unix and basic usage of computing services at IFB | [Link here](introduction-to-unix.pdf) | [Link here](#connecting-to-puhti) |
-| Afternoon | QC and trimming               | [Link here](#link here) | [Link here](#qc-and-trimming) |
-| Afternoon | Read-based analyses           | [Link here](read-based-analyses.pdf) | [Link here](#read-based-analyses) |
+| Morning   | Introduction to Unix, R and basic usage of computing services at IFB | [Link here](introduction-to-unix.pdf) | [Link here](connecxion) |
+| Afternoon | QC and trimming               | [Link here](link here) | [Link here](#qc-and-trimming) |
+| Afternoon | Read-based analyses           | [Link here](read-based-analyses.pdf) | [Link here](read-based-analyses) |
 
 
 
