@@ -1,12 +1,12 @@
 
 # Assembling metagenomic data
 
-We used the program MEGAHIT v1.0.3 (Li et al., 2014) to perform 30 metagenomic each experiment. 
+### Assemblies with MEGAHIT
 
-We used MEGAHIT the following way to individually co-assemble each metagenomic set:
+We used [MEGAHIT](https://github.com/voutcn/megahit) the following way to individually co-assemble each metagenomic set:
 
 ```bash
-mamba activate MEGAHIT_env
+mamba activate ASSEMBLIES_env
 mkdir ASSEMBLIES
 
 for i in {518..547}
@@ -22,6 +22,30 @@ do
             --num-cpu-threads 64
 done
 ```
+
+### Spades
+
+Alternatively [SPADES](https://github.com/ablab/spades) has specific pipelines for metagenomes. 
+
+```bash
+mamba activate MEGAHIT_env
+mkdir ASSEMBLIES
+
+for i in {518..547}
+do
+    spades   \
+        --meta \
+        --threads 60 \
+        --memory 60 \ 
+        --careful \
+        --cov-cutoff auto \
+        -1 TRIMMEDDATA/SRR15276"$i".R1.fastq.gz \
+        -2 TRIMMEDDATA/SRR15276"$i".R2.fastq.gz \
+        -k 55,77 \
+        -o ASSMBLIES/ 
+done
+```
+
 
 
 ### Assembly quality statistics
@@ -43,8 +67,6 @@ Which assembly has the longest contig when also long reads assemblies are includ
 Which assembly had the most contigs?
 Were the long read assemblies different from the corresponding short read assemblies?
 If yes, in what way?
-
-
 
 
 # Genome-resolved metagenomics with anvi'o

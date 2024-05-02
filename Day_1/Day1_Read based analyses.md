@@ -22,8 +22,10 @@ K-mer based methods count the k-mer frequency of the reads, and compare it to a 
 #### Download the database for Kraken2 and Bracken
 In order to run Kraken2, one has to build corresponding database first, the command to build the standard Kraken2 database is kraken2-build –standard –threads 24 –db kraken.db. This will download NCBI taxonomic information, as well as the complete genomes in RefSeq for the bacterial, archaeal, and viral domains, along with the human genome and a collection of known vectors (UniVec_Core). The build process is the most time-consuming, so we are not going to perform it in this workshop. We will link to prebuild databases are [here](https://benlangmead.github.io/aws-indexes/k2).
 
+k2_standard_08gb = Standard with DB capped at 8 GB: Refeq archaea, bacteria, viral, plasmid, human1, UniVec_Core
+
 ```bash
-wget https://genome-idx.s3.amazonaws.com/kraken/k2_nt_20231129.tar.gz
+wget https://genome-idx.s3.amazonaws.com/kraken/k2_standard_08gb_20240112.tar.gz
 
 ```
 
@@ -36,7 +38,7 @@ mkdir READBASED
 for i in {518..547}
 do
     echo "Mapping: SRR15276"$i""
-    kraken2 --db minikraken_20171019_8GB/ --threads 60  --output READBASED/SRR15276"$i".kraken.out --report READBASED/SRR15276"$i".kraken_report.out --paired TRIMMEDDATA/SRR15276"$i".R1.fastq.gz TRIMMEDDATA/SRR15276"$i".R2.fastq.gz
+    kraken2 --db READBASED/k2_standard_20240112/ --threads 60  --output READBASED/SRR15276"$i".kraken.out --report READBASED/SRR15276"$i".kraken_report.out --paired TRIMMEDDATA/SRR15276"$i".R1.fastq.gz TRIMMEDDATA/SRR15276"$i".R2.fastq.gz
 done
 ```
 
@@ -68,5 +70,4 @@ This produces 2 files in the same directory where the input files are:
 
 - *merged_rel_abund.csv*: contains table for all samples with bracken relative abundances and taxonimic assignments
 - *merged_read_numbers.csv*: contains table for all samples with bracken read counts and taxonimic assignments
-
 
