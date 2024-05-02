@@ -1,7 +1,7 @@
 # Assembling metagenomic data
 
 
-![binning](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_3/img/binning.png)
+![binning](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/binning.png)
 
 
 ### Assemblies with MEGAHIT
