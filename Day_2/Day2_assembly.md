@@ -1,6 +1,10 @@
 
 # Assembling metagenomic data
 
+
+[binning](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_3/img/binning.png)
+
+
 ### Assemblies with MEGAHIT
 
 We used [MEGAHIT](https://github.com/voutcn/megahit) the following way to individually co-assemble each metagenomic set:
@@ -46,27 +50,27 @@ do
 done
 ```
 
-
-
 ### Assembly quality statistics
 
 Let's take a look at the assemblies in a bit more detail with [MetaQUAST](http://bioinf.spbau.ru/metaquast).
 
 ```bash
-metaquast.py -o ASSEMBLIES/QUAST_REPORTS -t 64 ASSEMBLIES/SRR15276*/*.fa  
-python3 ~/Downloads/quast-5.2.0/metaquast.py -f -b -t 60 ASSEMBLIES/SRR15276*.fa/final.contigs.fa   -o ASSEMBLIES/QUAST_REPORTS 
+HELPER/metaquast.py -o ASSEMBLIES/QUAST_REPORTS -t 64 ASSEMBLIES/SRR15276*/*.fa  
+python3 metaquast.py -f -b -t 60 ASSEMBLIES/SRR15276*.fa/final.contigs.fa   -o ASSEMBLIES/QUAST_REPORTS 
 mamba deactivate
 ```
 
-Copy the folder called METAQUAST_FAST to your computer.
 You can view the results (report.html) in your favorite browser.
 
 Questions about the assembly QC:
 
-Which assembly has the longest contig when also long reads assemblies are included?
-Which assembly had the most contigs?
-Were the long read assemblies different from the corresponding short read assemblies?
-If yes, in what way?
+> Which assembly has the longest contig when also long reads assemblies are included?
+
+> Which assembly had the most contigs?
+
+> Were the long read assemblies different from the corresponding short read assemblies?
+
+> If yes, in what way?
 
 
 # Genome-resolved metagenomics with anvi'o
