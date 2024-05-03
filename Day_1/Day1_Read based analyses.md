@@ -51,12 +51,12 @@ What Kraken2 has produced is the classification of each read to a taxonomic rank
 
 ```bash
 mkdir READBASED
+mkdir READBASED/BRACKEN
 
-
-for i in {518..521}
+for i in {518..547}
 do
-    sed -i '/Viruses/,$d'  TEMP/SRR15276"$i".kraken_report.out  # remove viruses / bug in the DB formatting
-    bracken -d READBASED/k2_standard_20240112/ -t 10 -i TEMP/SRR15276"$i".kraken_report.out -o TEMP/SRR15276"$i".bracken
+    sed -i '/Viruses/,$d'  READBASED/SRR15276"$i".kraken_report.out  # remove viruses / bug in the DB formatting
+    bracken -d READBASED/k2_standard_20240112/ -t 10 -i READBASED/SRR15276"$i".kraken_report.out -o READBASED/BRACKEN/SRR15276"$i".bracken
 done
 ```
 
@@ -65,7 +65,7 @@ This step runs very fast, a few seconds. It generates two files for each sample 
 Finally, we are going to combine the abundance estimation for each sample into an abundance table.
 
 ```bash 
-python3 HELPER/merge_profiling_reports.py --files TEMP/SRR152765*.bracken -o merged
+python3 HELPER/merge_profiling_reports.py -i READBASED/BRACKEN -o merged
 ```
 
 This produces 2 files in the same directory where the input files are:

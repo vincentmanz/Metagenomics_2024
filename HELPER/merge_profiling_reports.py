@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Rebecca Ansorge 2021
+# Manzanilla Vincent 2024-05-03
 
 import pandas as pd
 import sys
@@ -17,7 +17,7 @@ def main(argv):
     args = parser.parse_args()
 
     # set wd
-    workingdir = os.chdir(args.inputdir)
+    workingdir = args.inputdir
     # list all files in wd and save as entries
     entries = os.listdir(workingdir)
 
@@ -27,15 +27,19 @@ def main(argv):
 
     # loop over all files in wd that end with annotations
     for rep in entries:
-        if rep.endswith('report'):
-            print('processing dataset ==> ', rep)
-            sample = pd.read_csv(rep, sep='\t', names=['rel_abund','reads','reads_lvl','taxlevel','taxid','taxa'])
+        if rep.endswith('8.bracken'):
+            print('\nprocessing dataset ==> ', rep)
+            sample = pd.read_csv(os.path.join(workingdir, rep), sep='\t', names=['rel_abund','reads','reads_lvl','taxlevel','taxid','taxa'])
+            print(sample.head())
             relabun = sample.loc[:,['rel_abund','taxlevel','taxid','taxa']]
             relabun.columns = [rep, 'taxlevel','taxid','taxa']
             reads = sample.loc[:,['reads','taxlevel','taxid','taxa']]
             reads.columns = [rep, 'taxlevel','taxid','taxa']
+            print('relabun: \n', relabun.head())
             combi_rel = pd.merge(combi_rel, relabun, how='outer', on=['taxid','taxa','taxlevel'])
+            print('combi_rel: \n', combi_rel.head())
             combi_reads = pd.merge(combi_reads, reads, how='outer', on=['taxid','taxa','taxlevel'])
+            print('\nFinished processing dataset ==> ', rep)
 
     combi_rel = combi_rel.reindex(sorted(combi_rel.columns,reverse=True), axis=1)
     combi_reads = combi_reads.reindex(sorted(combi_reads.columns,reverse=True), axis=1)

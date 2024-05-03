@@ -33,9 +33,24 @@ First we need to load our data. Usually the biggest bottleneck between raw data 
 Let’s first load the relative abundance table of the bracken results.
 
 ```R
-merge_rel_abund <- read.csv(file = "READBASED/merged_rel_abund.csv", sep = " ") 
 
-meta <- read_csv(file = "DATA/tryp_metadata.csv")
+bracken_merged <- read.csv(file = "bracken_merged.csv", sep = "\t") 
+
+# Select columns ending with ".bracken_num" for bracken_merged_reads
+bracken_merged_reads <- bracken_merged[grep("\\.bracken_num$", names(bracken_merged))]
+
+# Select columns ending with ".bracken_frac" for bracken_merged_frac
+bracken_merged_frac <- bracken_merged[grep("\\.bracken_frac$", names(bracken_merged))]
+
+# Remove the suffixes from the column names
+colnames(bracken_merged_reads) <- sub("\\.bracken_num$", "", colnames(bracken_merged_reads))
+colnames(bracken_merged_frac) <- sub("\\.bracken_frac$", "", colnames(bracken_merged_frac))
+
+# Add name, taxonomy_id, and taxonomy_lvl to both data frames
+bracken_merged_reads <- cbind(bracken_merged[, c("name", "taxonomy_id", "taxonomy_lvl")], bracken_merged_reads)
+bracken_merged_frac <- cbind(bracken_merged[, c("name", "taxonomy_id", "taxonomy_lvl")], bracken_merged_frac)
+
+meta <- read.csv(file = "../../Metagenomics_2024/DATA/tryp_metadata.csv", sep = ",")
 ```
 
 
