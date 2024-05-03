@@ -33,22 +33,9 @@ First we need to load our data. Usually the biggest bottleneck between raw data 
 Let’s first load the relative abundance table of the bracken results.
 
 ```R
-
-bracken_merged <- read.csv(file = "bracken_merged.csv", sep = "\t") 
-
-# Select columns ending with ".bracken_num" for bracken_merged_reads
-bracken_merged_reads <- bracken_merged[grep("\\.bracken_num$", names(bracken_merged))]
-
-# Select columns ending with ".bracken_frac" for bracken_merged_frac
-bracken_merged_frac <- bracken_merged[grep("\\.bracken_frac$", names(bracken_merged))]
-
-# Remove the suffixes from the column names
-colnames(bracken_merged_reads) <- sub("\\.bracken_num$", "", colnames(bracken_merged_reads))
-colnames(bracken_merged_frac) <- sub("\\.bracken_frac$", "", colnames(bracken_merged_frac))
-
-# Add name, taxonomy_id, and taxonomy_lvl to both data frames
-bracken_merged_reads <- cbind(bracken_merged[, c("name", "taxonomy_id", "taxonomy_lvl")], bracken_merged_reads)
-bracken_merged_frac <- cbind(bracken_merged[, c("name", "taxonomy_id", "taxonomy_lvl")], bracken_merged_frac)
+bracken_genus <- read.csv(file = "READBASED/BRACKEN/bracken_merged_genus.csv", sep = "\t") 
+bracken_family <- read.csv(file = "READBASED/BRACKEN/bracken_merged_family.csv", sep = "\t") 
+bracken_phylum <- read.csv(file = "READBASED/BRACKEN/bracken_merged_phylum.csv", sep = "\t") 
 
 meta <- read.csv(file = "../../Metagenomics_2024/DATA/tryp_metadata.csv", sep = ",")
 ```
@@ -56,9 +43,9 @@ meta <- read.csv(file = "../../Metagenomics_2024/DATA/tryp_metadata.csv", sep = 
 
 #### 2. Basic stats
 
-Before we start anything, let’s just check out or data a little bit. Never go blind into your analyses.
+Before we start anything, let’s just check out or data a little bit (sanity check). Never go blind into your analyses.
 
-**Q1: How many samples do we have in the metadata and in out data tibble**
+**Q: How many samples do we have in the metadata and in out data tibble**
 
 <details>
 <summary>
@@ -69,7 +56,7 @@ HINT
 
 </details>  
 
-**Q2: How many families were detected in our dataset?**
+**Q: How many families were detected in our dataset?**
 
 <details>
 <summary>
@@ -80,20 +67,52 @@ HINT
 
 </details>  
 
+**Q: Look at the data frame is ther some problem with the taxonomy**
+
+<details>
+<summary>
+HINT
+</summary>
+
+>  The family level has been recoded automatically form F for family to FALSE. 
+
+</details>  
+
+
+
 #### 3. Pre-process data
 
 Now that we know a little bit about our data we can start selecting what we want to look at. Let’s extract a separate tibble for species, family and phylum level. At each tibble we remove all the taxa that are not present in any of the samples.
 
 Let’s start with species:
 
-```R
-merge_rel_abund_spe <- subset(bracken_merged_reads, taxonomy_lvl == "S") %>% 
+```r
+# Change "FALSE" to "F" in the column "taxonomy_lvl"
+bracken_phylum$taxonomy_lvl <- ifelse(bracken_phylum$taxonomy_lvl == "FALSE", "F", bracken_phylum$taxonomy_lvl)
+
+# Select columns ending with ".bracken_num" for bracken_merged_reads
+phylum_reads <- bracken_phylum[grep("\\.bracken_num$", names(bracken_phylum))]
+
+# Select columns ending with ".bracken_frac" for bracken_merged_frac
+phylum_frac <- bracken_phylum[grep("\\.bracken_frac$", names(bracken_phylum))]
+
+# Remove the suffixes from the column names
+colnames(phylum_reads) <- sub("\\_phylum_filtered.bracken_num$", "", colnames(phylum_reads))
+colnames(phylum_frac) <- sub("\\_phylum_filtered.bracken_frac$", "", colnames(phylum_frac))
+
+# Add name, taxonomy_id, and taxonomy_lvl to both data frames
+phylum_reads <- cbind(bracken_phylum[, c("name", "taxonomy_id", "taxonomy_lvl")], phylum_reads)
+phylum_frac <- cbind(bracken_phylum[, c("name", "taxonomy_id", "taxonomy_lvl")], phylum_frac)
+head(phylum_frac)
+
+# filter data
+phylum_frac_filtered <- subset(phylum_frac, taxonomy_lvl == "P") %>% 
   select(-c("taxonomy_id","taxonomy_lvl")) %>%
-  filter(rowSums(select_if(., is.numeric)) != 0)
-head(merge_rel_abund_spe)
+  filter(rowSums(select_if(., is.numeric)) >= 0.001)
+head(phylum_frac_filtered)
 ```
 
-Can you come up with the command for family (F) and phylum (P) level? 
+**Q Can you come up with the command for family (S) and phylum (P) level?**
 
 **Tip**: make sure you save it to a different variable. Otherwise you are overwriting your species data.
 
@@ -102,17 +121,7 @@ Can you come up with the command for family (F) and phylum (P) level?
 HINT
 </summary>
 
-```r
-merge_rel_abund_family <- subset(bracken_merged_reads, taxonomy_lvl == "F") %>% 
-  select(-c("taxonomy_id","taxonomy_lvl")) %>%
-  filter(rowSums(select_if(., is.numeric)) != 0)
-head(merge_rel_abund_spe)
-
-merge_rel_abund_genus <- subset(bracken_merged_reads, taxonomy_lvl == "G") %>% 
-  select(-c("taxonomy_id","taxonomy_lvl")) %>%
-  filter(rowSums(select_if(., is.numeric)) != 0)
-head(merge_rel_abund_spe)
-```
+> If not done, run bracken on diffrent levels, load the merged file into rstudio. 
 
 </details>  
 
@@ -126,34 +135,37 @@ As a first overview of coarse differences we can create a stacked bar plot of ph
 
 ```r
 # data mingling
-merge_rel_abund_spe1 <- merge_rel_abund_spe %>% gather(key="SRA.identifier",value="rel_abun",-name)
+phylum_level <- phylum_frac_filtered %>% gather(key="SRA.identifier",value="rel_abun",-name)
 # now join with metadata by column 'Sample'. We are using left join in case the metadata file contains additional samples not included in our dataset
-merge_rel_abund_spe1 <- left_join(merge_rel_abund_spe1,meta,by="SRA.identifier") 
+phylum_level <- left_join(phylum_level,meta,by="SRA.identifier") 
 # check how it looks
-head(merge_rel_abund_spe1) 
+head(phylum_level) 
 ```
 
 
 ```r
-ggplot(merge_rel_abund_spe1, aes(x=SRA.identifier, y=rel_abun)) +
+ggplot(phylum_level, aes(x=Sample, y=rel_abun)) +
   geom_bar(stat="identity", position="stack", aes(fill=name)) + # chose bar plot
   theme(axis.text.x = element_text(angle=45, hjust=1)) + # put x-axis label at 45 degree angle
-  facet_grid(. ~ Time, scales="free_x",space = "free_x") # produce two panels according to metatadata category 'mocktreat'
+  facet_grid(. ~ Time, scales="free_x",space = "free_x") # produce two panels according to metatadata category 'Time' 
+  
 ```
 
-**Q3: Do the phyla profiles look similar between samples? Can you spot any trends?**
+![barplot](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/barplot_phylum.png)
+
+**Q: Do the phyla profiles look similar between samples? Can you spot any trends?**
 
 <details>
 <summary>
 HINT
 </summary>
 
-> A3: We see that the same two Phyla dominate all samples but there is some variability between samples. From a first look there does not seem to be a major difference between the two groups A and B at this taxonomic level.
+> A: We see that the same two Phyla dominate all samples but there is some variability between samples. From a first look there does not seem to be a major difference between the two groups A and B at this taxonomic level.
 
 </details>  
 
 
-*If you have time you can also visualize the other taxonomic levels (e.g. species) with the same approach. Try to come up with the code yourself. Hint: Omit legend using legend.position.*
+*If you have time you can also visualize the other taxonomic levels (e.g. species) with the same approach. Try to come up with the code yourself. Hint: Omit legend using legend.position (guides(fill = FALSE)).*
 
 
 <details>
@@ -163,20 +175,18 @@ HINT
 
 ```r
 # bar plot phyla relative abundances
-brel_spec_gg1 <- brel_spec %>% gather(key="Sample",value="rel_abun",-taxa)
-brel_spec_gg1 <- left_join(brel_spec_gg1,meta,by="Sample")
-
-ggplot(brel_spec_gg1, aes(x=Sample, y=rel_abun)) +
-  geom_bar(stat="identity",position="stack", aes(fill=taxa)) +
-  theme(axis.text.x = element_text(angle=45, hjust=1),
-        legend.position = "none") +
-  facet_grid(. ~ mocktreat, scales="free_x",space = "free_x")
+ggplot(family_level, aes(x=Sample, y=rel_abun)) +
+  geom_bar(stat="identity", position="stack", aes(fill=name)) + # chose bar plot
+  theme(axis.text.x = element_text(angle=45, hjust=1)) + # put x-axis label at 45 degree angle
+  facet_grid(. ~ Time, scales="free_x",space = "free_x") # produce two panels according to metatadata category 'Time' 
 ```
 
 </details>  
 
+![barplot](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/barplot_family.png)
 
-**Q4: Does the profile change according to taxonomic level? Is the stacked bar plot helpful in all scenarios?**
+
+**Q: Does the profile change according to taxonomic level? Is the stacked bar plot helpful in all scenarios?**
 
 
 <details>
@@ -184,7 +194,7 @@ ggplot(brel_spec_gg1, aes(x=Sample, y=rel_abun)) +
 HINT
 </summary>
 
-> A4: When too many taxa are present, such as at species level, it becomes difficult to distinguish the colors. As you might realize, when there are too many taxa it becomes very difficult to spot anything in the stacked bar plot. 
+> A: When too many taxa are present, such as at species level, it becomes difficult to distinguish the colors. As you might realize, when there are too many taxa it becomes very difficult to spot anything in the stacked bar plot. 
 
 </details>  
 
@@ -203,16 +213,17 @@ ggplot(brel_fam_gg1, aes(x=Sample, y=taxa)) +
   scale_size_continuous(limits = c(0.00001,max(brel_phy_gg1$rel_abun))) + # sets minimum above '0' 
   facet_grid(. ~ mocktreat, scales="free_x",space = "free_x")
 ```
+![bubble](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/bubble_plot.png)
 
 
-**Q5: Did you notice that here we added an extra level of information? Can you spot what it is?**
+**Q: Did you notice that here we added an extra level of information? Can you spot what it is?**
 
 <details>
 <summary>
 HINT
 </summary>
 
-> A5: Now we produced panels according to mocktreat and colored according to time point. Like this you can see that we only have two time points in one of the groups. This plot allows us therefore to combine multiple metadata layers.
+> A: Now we produced panels according to Time and colored according to Type. This plot allows us to combine multiple metadata layers. 
 
 </details>  
 
@@ -241,14 +252,14 @@ pheatmap::pheatmap(brel_spec_gg1,
                    annotation_names_col=TRUE)
 ```
 
-**Q6: what can you learn from the heatmap. Are there any informative clusters?**
+**Q: what can you learn from the heatmap. Are there any informative clusters?**
 
 <details>
 <summary>
 HINT
 </summary>
 
-A6: We can see that 4 species dominate the communities in most samples. Adding the metadata we can also see that data do not cluster strongly according to group or time point, but there is some degree of structuring in mocktreat.
+> A: We can see that 4 species dominate the communities in most samples. Adding the metadata we can also see that data do not cluster strongly according to group or time point, but there is some degree of structuring in mocktreat.
 
 </details>  
 

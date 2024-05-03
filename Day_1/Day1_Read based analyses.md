@@ -49,25 +49,65 @@ What Kraken2 has produced is the classification of each read to a taxonomic rank
 
 [Bracken](https://github.com/jenniferlu717/Bracken) takes the output from Kraken and estimate the abundance at user specified level: species, genus, or phylum.
 
-3 Goups, one with species, Genus and Families, If you have time do the 3. 
+Run the script for 3 levels one with species, Genus and Families.
+    # sed -i '/Viruses/,$d'  READBASED/SRR15276"$i".kraken_report.out  # remove viruses / bug in the DB formatting
+
 
 ```bash
 mkdir READBASED
 mkdir READBASED/BRACKEN
+#sed -i '/Viruses/,$d'  READBASED/SRR15276"$i".kraken_report.out  # remove viruses / bug in the DB formatting
 
 for i in {518..547}
 do
-    sed -i '/Viruses/,$d'  READBASED/SRR15276"$i".kraken_report.out  # remove viruses / bug in the DB formatting
-    bracken -d READBASED/k2_standard_20240112/ -t 10 -i READBASED/SRR15276"$i".kraken_report.out -o READBASED/BRACKEN/SRR15276"$i".bracken
+    bracken -d READBASED/k2_standard_20240112/ -t 1000 -i READBASED/SRR15276"$i".kraken_report.out -o READBASED/BRACKEN/SRR15276"$i"_genus.bracken -l G
+    bracken -d READBASED/k2_standard_20240112/ -t 1000 -i READBASED/SRR15276"$i".kraken_report.out -o READBASED/BRACKEN/SRR15276"$i"_family.bracken -l F
+    bracken -d READBASED/k2_standard_20240112/ -t 1000 -i READBASED/SRR15276"$i".kraken_report.out -o READBASED/BRACKEN/SRR15276"$i"_phylum.bracken -l P
 done
 ```
 
 This step runs very fast, a few seconds. It generates two files for each sample in its corresponding subdirectory inside 03-Kraken: samplename_report_species.txt and samplename.kraken_report_bracken.out. Please take a look at both files to understand what they contain.
 
+
+**Q: look at the report do you see un expected results?**
+
+<details>
+<summary>
+HINT
+</summary>
+
+> there is human associated reads, whish is more likely can come from contamination. 
+
+</details>  
+
+We need to filter the filnal report and remove possible contamination. 
+
+
+```bash 
+for i in {518..547}
+do
+    echo "Processing: SRR15276"$i""
+    python3 HELPER/filter_bracken.out.py \
+    --input READBASED/BRACKEN/SRR15276"$i"_genus.bracken \
+    -o READBASED/BRACKEN/SRR15276"$i"_genus_filtered.bracken \
+    --exclude  9604
+        python3 HELPER/filter_bracken.out.py \
+    --input READBASED/BRACKEN/SRR15276"$i"_family.bracken \
+    -o READBASED/BRACKEN/SRR15276"$i"_family_filtered.bracken \
+    --exclude  9605
+        python3 HELPER/filter_bracken.out.py \
+    --input READBASED/BRACKEN/SRR15276"$i"_phylum.bracken \
+    -o READBASED/BRACKEN/SRR15276"$i"_phylum_filtered.bracken \
+    --exclude  7711
+done
+```
+
 Finally, we are going to combine the abundance estimation for each sample into an abundance table.
 
 ```bash 
-python3 HELPER/merge_profiling_reports.py -i READBASED/BRACKEN -o merged
+python3 HELPER/combine_bracken_outputs.py --files READBASED/BRACKEN/SRR152765*_genus_filtered.bracken -o READBASED/BRACKEN/bracken_merged_genus.csv
+python3 HELPER/combine_bracken_outputs.py --files READBASED/BRACKEN/SRR152765*_family_filtered.bracken -o READBASED/BRACKEN/bracken_merged_family.csv
+python3 HELPER/combine_bracken_outputs.py --files READBASED/BRACKEN/SRR152765*_phylum_filtered.bracken -o READBASED/BRACKEN/bracken_merged_phylum.csv
 ```
 
 This produces 2 files in the same directory where the input files are:

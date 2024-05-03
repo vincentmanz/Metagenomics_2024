@@ -1,0 +1,9 @@
+name	taxonomy_id	taxonomy_lvl	kraken_assigned_reads	added_reads	new_est_reads	fraction_total_reads
+Bacillota	1239	P	766912	30327	797239	0.6629829614
+Actinomycetota	201174	P	317514	75	317589	0.2641066176
+Pseudomonadota	1224	P	68814	1006	69820	0.0580622252
+Bacteroidota	976	P	9952	3	9955	0.0082785656
+Euryarchaeota	28890	P	2545	7	2552	0.0021222400
+Campylobacterota	29547	P	1890	1	1891	0.0015725532
+Cyanobacteriota	1117	P	1885	0	1885	0.0015675637
+Mycoplasmatota	544448	P	1569	3	1572	0.0013072732
