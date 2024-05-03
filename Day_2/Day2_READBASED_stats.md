@@ -236,22 +236,24 @@ Let’s create a heatmap of the 20 most abundant spexies in our samples.
 
 ```r
 # sort species by abundance across samples and select top 20
-merge_rel_abund_spe_gg1<-brel_spec[order(rowSums(select_if(merge_rel_abund_spe, is.numeric)),decreasing=T),] %>%
-  head(20) %>%
-  column_to_rownames("taxa")
+phylum_frac_reduce <- phylum_frac %>% select(-taxonomy_id, -taxonomy_lvl)
+phylum_level_abundance <-  phylum_frac_reduce[order(rowSums(select_if(phylum_frac, is.numeric)),decreasing=T),] %>%
+  head(20) %>% as_tibble() %>% 
+  column_to_rownames( "name")
 
 # shape the metadata
-meta_h <- subset(meta, Sample %in% colnames(merge_rel_abund_spe_gg1)) %>% 
-  column_to_rownames("Sample") # shoft the 'Sample' column to rownames
+meta_h <- subset(meta, SRA.identifier %in% colnames(phylum_level_abundance)) %>%  as_tibble() %>% 
+  column_to_rownames("SRA.identifier") # shoft the 'Sample' column to rownames
 
 # plot the heatmap
-pheatmap::pheatmap(brel_spec_gg1,
+pheatmap::pheatmap(phylum_level_abundance,
                    cluster_rows = TRUE,
                    cluster_cols = TRUE,
-                   annotation_col = meta_h[,c(1,3,4)],
+                   annotation_col = meta_h[,c(3,4,5)],
                    annotation_names_col=TRUE)
 ```
-
+!!!! change the name of the X axis. 
+https://telatin.github.io/microbiome-bioinformatics/data/kraken-r/2021-03-33-ExploreMGprofiles_solutions.html
 **Q: what can you learn from the heatmap. Are there any informative clusters?**
 
 <details>
