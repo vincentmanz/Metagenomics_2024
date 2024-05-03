@@ -58,14 +58,14 @@ meta <- read.csv(file = "../../Metagenomics_2024/DATA/tryp_metadata.csv", sep = 
 
 Before we start anything, let’s just check out or data a little bit. Never go blind into your analyses.
 
-**Q1: How many samples do we have in the matadata and in out data tibble**
+**Q1: How many samples do we have in the metadata and in out data tibble**
 
 <details>
 <summary>
 HINT
 </summary>
 
-> XXXX
+> nrow(meta)
 
 </details>  
 
@@ -76,7 +76,7 @@ HINT
 HINT
 </summary>
 
-> XXX
+> nrow(bracken_merged)
 
 </details>  
 
@@ -87,10 +87,10 @@ Now that we know a little bit about our data we can start selecting what we want
 Let’s start with species:
 
 ```R
-merge_rel_abund_spe <- subset(merge_rel_abund, taxlevel == "S") %>% 
-  select(-c("taxid","taxlevel")) %>%
+merge_rel_abund_spe <- subset(bracken_merged_reads, taxonomy_lvl == "S") %>% 
+  select(-c("taxonomy_id","taxonomy_lvl")) %>%
   filter(rowSums(select_if(., is.numeric)) != 0)
-head(brel_spec)
+head(merge_rel_abund_spe)
 ```
 
 Can you come up with the command for family (F) and phylum (P) level? 
@@ -103,19 +103,20 @@ HINT
 </summary>
 
 ```r
-merge_rel_abund_fam<-subset(merge_rel_abund, taxlevel == "F") %>% 
-  select(-c("taxid","taxlevel")) %>%
+merge_rel_abund_family <- subset(bracken_merged_reads, taxonomy_lvl == "F") %>% 
+  select(-c("taxonomy_id","taxonomy_lvl")) %>%
   filter(rowSums(select_if(., is.numeric)) != 0)
+head(merge_rel_abund_spe)
 
-merge_rel_abund_phy<-subset(merge_rel_abund, taxlevel == "P") %>% 
-  select(-c("taxid","taxlevel")) %>%
+merge_rel_abund_genus <- subset(bracken_merged_reads, taxonomy_lvl == "G") %>% 
+  select(-c("taxonomy_id","taxonomy_lvl")) %>%
   filter(rowSums(select_if(., is.numeric)) != 0)
+head(merge_rel_abund_spe)
 ```
 
 </details>  
 
 
-XXXX DISCUSSION XXXXX
 
 
 #### 4. Plot relative abundances
@@ -125,20 +126,19 @@ As a first overview of coarse differences we can create a stacked bar plot of ph
 
 ```r
 # data mingling
-merge_rel_abund_gg1 <- merge_rel_abund_phy %>% gather(key="Sample",value="rel_abun",-taxa)
+merge_rel_abund_spe1 <- merge_rel_abund_spe %>% gather(key="SRA.identifier",value="rel_abun",-name)
 # now join with metadata by column 'Sample'. We are using left join in case the metadata file contains additional samples not included in our dataset
-merge_rel_abund_gg1 <- left_join(merge_rel_abund_gg1,meta,by="Sample") 
+merge_rel_abund_spe1 <- left_join(merge_rel_abund_spe1,meta,by="SRA.identifier") 
 # check how it looks
-head(brel_phy_gg1) 
+head(merge_rel_abund_spe1) 
 ```
 
 
 ```r
-# bar plot phyla relative abundances
-ggplot(merge_rel_abund_gg1, aes(x=Sample, y=rel_abun)) +
-  geom_bar(stat="identity",position="stack", aes(fill=taxa)) + # chose bar plot
+ggplot(merge_rel_abund_spe1, aes(x=SRA.identifier, y=rel_abun)) +
+  geom_bar(stat="identity", position="stack", aes(fill=name)) + # chose bar plot
   theme(axis.text.x = element_text(angle=45, hjust=1)) + # put x-axis label at 45 degree angle
-  facet_grid(. ~ mocktreat, scales="free_x",space = "free_x") # produce two panels according to metatadata category 'mocktreat'
+  facet_grid(. ~ Time, scales="free_x",space = "free_x") # produce two panels according to metatadata category 'mocktreat'
 ```
 
 **Q3: Do the phyla profiles look similar between samples? Can you spot any trends?**
