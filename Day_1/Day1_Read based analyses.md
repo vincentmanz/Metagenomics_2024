@@ -56,10 +56,11 @@ Run the script for 3 levels one with species, Genus and Families.
 ```bash
 mkdir READBASED
 mkdir READBASED/BRACKEN
-#sed -i '/Viruses/,$d'  READBASED/SRR15276"$i".kraken_report.out  # remove viruses / bug in the DB formatting
 
 for i in {518..547}
 do
+    sed -i '/Viruses/,$d'  READBASED/SRR15276"$i".kraken_report.out  # remove viruses / bug in the DB formatting
+
     bracken -d READBASED/k2_standard_20240112/ -t 1000 -i READBASED/SRR15276"$i".kraken_report.out -o READBASED/BRACKEN/SRR15276"$i"_genus.bracken -l G
     bracken -d READBASED/k2_standard_20240112/ -t 1000 -i READBASED/SRR15276"$i".kraken_report.out -o READBASED/BRACKEN/SRR15276"$i"_family.bracken -l F
     bracken -d READBASED/k2_standard_20240112/ -t 1000 -i READBASED/SRR15276"$i".kraken_report.out -o READBASED/BRACKEN/SRR15276"$i"_phylum.bracken -l P
