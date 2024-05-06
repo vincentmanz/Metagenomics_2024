@@ -1,0 +1,39 @@
+# list software
+
+Day 1 - QC
+- Trimmomatic -    mamba install trimmomatic
+- CUTADAPT - mamba install cutadapt
+- fastqc - mamba install fastqc
+- multiqc - mamba install multiqc
+- bowtie2 - mamba install bowtie2
+- samtools - mamba install samtools
+- bamToFastq - mamba install 10x_bamtofastq
+
+
+Day 1 - ReadBased
+
+- kraken2 - bracken: mamba install bracken kraken2
+- DB: https://genome-idx.s3.amazonaws.com/kraken/k2_standard_08gb_20240112.tar.gz
+
+Day 2 - ReadBased
+- Rstudio 
+    - library(tidyverse)
+    - library(vegan)
+    - library(coin)
+    - library(pheatmap)
+    - library(ggplot2)
+
+Day 2 - Assemblies
+- MEGAHIT : https://github.com/voutcn/megahit - conda install -c bioconda megahit
+- metaquast : https://quast.sourceforge.net/metaquast - conda install -c bioconda metaquast
+- bowtie2 
+- samtools
+- runMetaBat.sh : https://bitbucket.org/berkeleylab/metabat/src/master/
+- metabat2 - mamba install metabat2
+- checkm2 :    mamba install checkm-genome
+
+- GTDB-Tk :    mamba install gtdbtk
+                Run the command download-db.sh to automatically download to:
+                /home/vincent/miniforge3/envs/metagenomics_2024/share/gtdbtk-1.7.0/db/
+
+

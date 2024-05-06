@@ -271,7 +271,7 @@ These may not be conclusive taxonomic insights, but it’s still very useful to 
 
 
 
-# Mapping the reads back to the assembly
+# Back Mapping: mapping the reads back to the assembly
 
 Next thing to do is mapping all the reads back to the assembly. We use the renamed >5000 nt contigs and do it sample-wise, so each sample is mapped separately using the trimmed R1 & R2 reads.
 
@@ -307,4 +307,27 @@ do
     samtools index MAPPING/SRR15276"$i"_sorted.bam
 
 done
+```
+
+
+
+### METABAT2
+
+
+```bash
+mkdir TEST
+bowtie2-build --threads 64 ASSEMBLIES/SRR15276518-RAW.fa/final.contigs.fa TEST/SRR15276518_1000nt
+
+bowtie2 --threads 64 -x TEST/SRR15276518_1000nt -1 TRIMMEDDATA/SRR15276518.R1.fastq.gz -2 TRIMMEDDATA/SRR15276518.R2.fastq.gz -S TEST/SRR15276518.sam
+samtools view --threads 64 -F 4 -bS TEST/SRR15276518.sam > TEST/SRR15276518_RAW.bam
+samtools sort  --threads 64 TEST/SRR15276518_RAW.bam -o TEST/SRR15276518_sorted.bam
+
+
+runMetaBat.sh ASSEMBLIES/SRR15276518-RAW.fa/final.contigs.fa TEST/SRR15276518_sorted.bam
+metabat2 -i ASSEMBLIES/SRR15276518-RAW.fa/final.contigs.fa -a final.contigs.fa.depth.txt -o TEST/SRR15276518_depth_matrix.csv -v
+
+# add the DB in the path: https://github.com/Ecogenomics/CheckM/wiki/Installation#required-reference-data
+checkm lineage_wf -t 60 -x fa final.contigs.fa.metabat-bins-20240506_120635/ TEST/
+
+
 ```
