@@ -81,7 +81,7 @@ HINT
 
 </details>  
 
-We need to filter the filnal report and remove possible contamination. 
+We need to filter the final report and remove possible contamination. 
 
 
 ```bash 
