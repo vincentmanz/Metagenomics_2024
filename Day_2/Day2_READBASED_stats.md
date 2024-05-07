@@ -248,7 +248,35 @@ Enterococcus_abund_plot <- ggplot(Enterococcus_abun_df_meta, aes(x = as.numeric(
   
 ```
 
-![density_plot](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/density_Entero.png
+![density_plot](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/density_Entero.png)
+
+
+
+
+###  Exercises Normalization (optional) 
+
+**Transformations** The data contains read counts. We can convert these into relative abundances and other formats. Compare abundance of a given taxonomic group using the example data before and after the compositionality transformation (with a cross-plot, for instance). You can also compare the results to CLR-transformed data (see e.g. Gloor et al. 2017)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
