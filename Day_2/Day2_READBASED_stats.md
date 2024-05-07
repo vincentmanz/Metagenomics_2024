@@ -23,6 +23,8 @@ library(tidyverse)
 library(vegan)
 library(coin)
 library(pheatmap)
+library(ggplot2)
+
 ```
 
 
@@ -33,6 +35,7 @@ First we need to load our data. Usually the biggest bottleneck between raw data 
 Let’s first load the relative abundance table of the bracken results.
 
 ```R
+bracken_species <- read.csv(file = "READBASED/BRACKEN/bracken_merged_species.csv", sep = "\t") 
 bracken_genus <- read.csv(file = "READBASED/BRACKEN/bracken_merged_genus.csv", sep = "\t") 
 bracken_family <- read.csv(file = "READBASED/BRACKEN/bracken_merged_family.csv", sep = "\t") 
 bracken_phylum <- read.csv(file = "READBASED/BRACKEN/bracken_merged_phylum.csv", sep = "\t") 
@@ -87,25 +90,57 @@ Now that we know a little bit about our data we can start selecting what we want
 Let’s start with species:
 
 ```r
+
+
 # Change "FALSE" to "F" in the column "taxonomy_lvl"
-bracken_phylum$taxonomy_lvl <- ifelse(bracken_phylum$taxonomy_lvl == "FALSE", "F", bracken_phylum$taxonomy_lvl)
+bracken_family$taxonomy_lvl <- ifelse(bracken_family$taxonomy_lvl == "FALSE", "F", bracken_family$taxonomy_lvl)
 
 # Select columns ending with ".bracken_num" for bracken_merged_reads
+species_reads <- bracken_species[grep("\\.bracken_num$", names(bracken_species))]
+genus_reads <- bracken_genus[grep("\\.bracken_num$", names(bracken_genus))]
+family_reads <- bracken_family[grep("\\.bracken_num$", names(bracken_family))]
 phylum_reads <- bracken_phylum[grep("\\.bracken_num$", names(bracken_phylum))]
 
 # Select columns ending with ".bracken_frac" for bracken_merged_frac
+species_frac <- bracken_species[grep("\\.bracken_frac$", names(bracken_species))]
+genus_frac <- bracken_genus[grep("\\.bracken_frac$", names(bracken_genus))]
+family_frac <- bracken_family[grep("\\.bracken_frac$", names(bracken_family))]
 phylum_frac <- bracken_phylum[grep("\\.bracken_frac$", names(bracken_phylum))]
 
 # Remove the suffixes from the column names
+colnames(species_reads) <- sub("\\_species_filtered.bracken_num$", "", colnames(species_reads))
+colnames(species_frac) <- sub("\\_species_filtered.bracken_frac$", "", colnames(species_frac))
+colnames(genus_reads) <- sub("\\_genus_filtered.bracken_num$", "", colnames(genus_reads))
+colnames(genus_frac) <- sub("\\_genus_filtered.bracken_frac$", "", colnames(genus_frac))
+colnames(family_reads) <- sub("\\_family_filtered.bracken_num$", "", colnames(family_reads))
+colnames(family_frac) <- sub("\\_family_filtered.bracken_frac$", "", colnames(family_frac))
 colnames(phylum_reads) <- sub("\\_phylum_filtered.bracken_num$", "", colnames(phylum_reads))
 colnames(phylum_frac) <- sub("\\_phylum_filtered.bracken_frac$", "", colnames(phylum_frac))
 
+
 # Add name, taxonomy_id, and taxonomy_lvl to both data frames
+species_reads <- cbind(bracken_species[, c("name", "taxonomy_id", "taxonomy_lvl")], species_reads)
+species_frac <- cbind(bracken_species[, c("name", "taxonomy_id", "taxonomy_lvl")], species_frac)
+genus_reads <- cbind(bracken_genus[, c("name", "taxonomy_id", "taxonomy_lvl")], genus_reads)
+genus_frac <- cbind(bracken_genus[, c("name", "taxonomy_id", "taxonomy_lvl")], genus_frac)
+family_reads <- cbind(bracken_family[, c("name", "taxonomy_id", "taxonomy_lvl")], family_reads)
+family_frac <- cbind(bracken_family[, c("name", "taxonomy_id", "taxonomy_lvl")], family_frac)
 phylum_reads <- cbind(bracken_phylum[, c("name", "taxonomy_id", "taxonomy_lvl")], phylum_reads)
 phylum_frac <- cbind(bracken_phylum[, c("name", "taxonomy_id", "taxonomy_lvl")], phylum_frac)
 head(phylum_frac)
 
 # filter data
+species_frac_filtered <- subset(species_frac, taxonomy_lvl == "S") %>% 
+  select(-c("taxonomy_id","taxonomy_lvl")) %>%
+  filter(rowSums(select_if(., is.numeric)) >= 0.001)
+genus_frac_filtered <- subset(genus_frac, taxonomy_lvl == "G") %>% 
+  select(-c("taxonomy_id","taxonomy_lvl")) %>%
+  filter(rowSums(select_if(., is.numeric)) >= 0.001)
+head(genus_frac_filtered)
+family_frac_filtered <- subset(family_frac, taxonomy_lvl == "F") %>% 
+  select(-c("taxonomy_id","taxonomy_lvl")) %>%
+  filter(rowSums(select_if(., is.numeric)) >= 0.001)
+head(family_frac_filtered)
 phylum_frac_filtered <- subset(phylum_frac, taxonomy_lvl == "P") %>% 
   select(-c("taxonomy_id","taxonomy_lvl")) %>%
   filter(rowSums(select_if(., is.numeric)) >= 0.001)
@@ -134,12 +169,30 @@ Let’s plot and explore microbial composition and relative abundances in our sa
 As a first overview of coarse differences we can create a stacked bar plot of phyla. We need to mingle our data structure a bit to make it compliant with ggplot and add the metadata to get an extra level of information.
 
 ```r
+
 # data mingling
+species_level <- species_frac_filtered %>% gather(key="SRA.identifier",value="rel_abun",-name)
+# now join with metadata by column 'Sample'. We are using left join in case the metadata file contains additional samples not included in our dataset
+species_level <- left_join(species_level,meta,by="SRA.identifier") 
+# check how it looks
+head(species_level) 
+genus_level <- genus_frac_filtered %>% gather(key="SRA.identifier",value="rel_abun",-name)
+# now join with metadata by column 'Sample'. We are using left join in case the metadata file contains additional samples not included in our dataset
+genus_level <- left_join(genus_level,meta,by="SRA.identifier") 
+# check how it looks
+head(genus_level) 
+family_level <- family_frac_filtered %>% gather(key="SRA.identifier",value="rel_abun",-name)
+# now join with metadata by column 'Sample'. We are using left join in case the metadata file contains additional samples not included in our dataset
+family_level <- left_join(family_level,meta,by="SRA.identifier") 
+# check how it looks
+head(family_level) 
 phylum_level <- phylum_frac_filtered %>% gather(key="SRA.identifier",value="rel_abun",-name)
 # now join with metadata by column 'Sample'. We are using left join in case the metadata file contains additional samples not included in our dataset
 phylum_level <- left_join(phylum_level,meta,by="SRA.identifier") 
 # check how it looks
 head(phylum_level) 
+
+
 ```
 
 
@@ -238,22 +291,24 @@ Let’s create a heatmap of the 20 most abundant spexies in our samples.
 
 
 ```r
-
 # sort species by abundance across samples and select top 20
+species_level_abundance <- species_frac %>% select(-taxonomy_id, -taxonomy_lvl) %>% head(20) %>% as_tibble() %>%  column_to_rownames( "name")
 genus_level_abundance <- genus_frac %>% select(-taxonomy_id, -taxonomy_lvl) %>% head(20) %>% as_tibble() %>%  column_to_rownames( "name")
 phylum_level_abundance <- phylum_frac %>% select(-taxonomy_id, -taxonomy_lvl) %>% head(20) %>% as_tibble() %>%  column_to_rownames( "name")
 
 
 # shape the metadata
+meta_s <- subset(meta, SRA.identifier %in% colnames(species_level_abundance)) %>%  as_tibble() %>% 
+  column_to_rownames("Sample") # shoft the 'Sample' column to rownames
 meta_h <- subset(meta, SRA.identifier %in% colnames(genus_level_abundance)) %>%  as_tibble() %>% 
   column_to_rownames("Sample") # shoft the 'Sample' column to rownames
 meta_p <- subset(meta, SRA.identifier %in% colnames(phylum_level_abundance)) %>%  as_tibble() %>% 
   column_to_rownames("Sample") # shoft the 'Sample' column to rownames
 
 column_name <- meta_h %>% rownames_to_column() %>%  arrange(row_number(SRA.identifier)) %>% pull(rowname)
+colnames(species_level_abundance) <- column_name
 colnames(genus_level_abundance) <- column_name
 colnames(phylum_level_abundance) <- column_name
-
 
 
 # plot the heatmap
@@ -268,7 +323,11 @@ pheatmap::pheatmap(phylum_level_abundance,
                    cluster_cols = TRUE,
                    annotation_col = meta_h[,c(2,3,4,5)],
                    annotation_names_col=TRUE)
-
+pheatmap::pheatmap(species_level_abundance,
+                   cluster_rows = TRUE,
+                   cluster_cols = TRUE,
+                   annotation_col = meta_h[,c(2,3,4,5)],
+                   annotation_names_col=TRUE)
 ```
 ![bubble](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/heatmap_phy.png)
 
@@ -298,15 +357,15 @@ Often we want to know whether the microbiomes are different between conditions o
 set.seed(34521)
 
 # Data mingling
-merge_rel_abund_gg2 <- merge_rel_abund_spe %>% 
-  column_to_rownames("taxa") %>% 
+species_frac_filtered_f <- species_frac_filtered %>% 
+  column_to_rownames("name") %>% 
   t() # transpose
 
 # Calculate distance matrix
-merge_rel_abund_gg2_dist <- vegdist(merge_rel_abund_gg2, method = "bray")
+species_frac_filtered_dist <- vegdist(species_frac_filtered_f, method = "bray")
 
 # Perform NMDS on distance matrix
-nmds_spec <- metaMDS(merge_rel_abund_gg2_dist,distance = "bray",k = 2)
+nmds_spec <- metaMDS(species_frac_filtered_dist,distance = "bray",k = 2)
 ```
 
 Check the output. 
@@ -315,7 +374,7 @@ Check the output.
 # Check the output
 nmds_spec
 ```
-Here you see a kind of summary of the analysis. For example, you can see that you used 2 dimensions and the stress was approx. 0.15. In general if a stress is above 0.2 then the clustering is not reliably representing the data and should be interpreted with caution. But here the stress is below 0.2, so we are okay.
+Here you see a kind of summary of the analysis. For example, you can see that you used 2 dimensions and the stress was approx. 0.05. In general if a stress is above 0.2 then the clustering is not reliably representing the data and should be interpreted with caution. But here the stress is below 0.2, so we are okay.
 
 Now let’s look at the ordination. To plot the data with ggplot, we need to extract the coordinaties of each point from nmds_spec$points.
 
@@ -325,23 +384,28 @@ nmds_spec_gg<-as.data.frame(nmds_spec$points) %>%
   rownames_to_column("Sample") %>%
   left_join(meta, by="Sample")
 ```
-Then we can greate the plot easily and color according to the metadata. We are choosing timepoint and mocktreat for the coloring respectively. But feel free to explore other parameters.
+Then we can create the plot easily and color according to the metadata. We are choosing timepoint and mocktreat for the coloring respectively. But feel free to explore other parameters.
 
 ```r
 # Let's plot and color according to time point
 ggplot(nmds_spec_gg, aes(x=MDS1,y=MDS2)) +
-  geom_point(aes(color=timepoint), size=3, alpha=0.5) +
-  ggtitle("NMDS colored according to timepoint")
+  geom_point(aes(color=Time), size=3, alpha=0.5) +
+  ggtitle("NMDS colored according to Time")
 ```
 
+![nmds_time](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_time.png)
 
 
 ```r
-# Now let's plot according to mocktreat
+# Let's plot and color according to type
 ggplot(nmds_spec_gg, aes(x=MDS1,y=MDS2)) +
-  geom_point(aes(color=mocktreat), size=3, alpha=0.5)+
-  ggtitle("NMDS colored according to mocktreat")
+  geom_point(aes(color=Type), size=3, alpha=0.5) +
+  ggtitle("NMDS colored according to Type")
 ```
+![nmds_type](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_type.png)
+
+
+
 #### 6. Differential abundance
 
 

@@ -60,7 +60,7 @@ mkdir READBASED/BRACKEN
 for i in {518..547}
 do
     sed -i '/Viruses/,$d'  READBASED/SRR15276"$i".kraken_report.out  # remove viruses / bug in the DB formatting
-
+    bracken -d READBASED/k2_standard_20240112/ -t 1000 -i READBASED/SRR15276"$i".kraken_report.out -o READBASED/BRACKEN/SRR15276"$i"_species.bracken -l S
     bracken -d READBASED/k2_standard_20240112/ -t 1000 -i READBASED/SRR15276"$i".kraken_report.out -o READBASED/BRACKEN/SRR15276"$i"_genus.bracken -l G
     bracken -d READBASED/k2_standard_20240112/ -t 1000 -i READBASED/SRR15276"$i".kraken_report.out -o READBASED/BRACKEN/SRR15276"$i"_family.bracken -l F
     bracken -d READBASED/k2_standard_20240112/ -t 1000 -i READBASED/SRR15276"$i".kraken_report.out -o READBASED/BRACKEN/SRR15276"$i"_phylum.bracken -l P
@@ -89,6 +89,10 @@ for i in {518..547}
 do
     echo "Processing: SRR15276"$i""
     python3 HELPER/filter_bracken.out.py \
+    --input READBASED/BRACKEN/SRR15276"$i"__species_.bracken \
+    -o READBASED/BRACKEN/SRR15276"$i"_species_filtered.bracken \
+    --exclude  9606
+    python3 HELPER/filter_bracken.out.py \
     --input READBASED/BRACKEN/SRR15276"$i"_genus.bracken \
     -o READBASED/BRACKEN/SRR15276"$i"_genus_filtered.bracken \
     --exclude  9605
@@ -114,7 +118,7 @@ This produces 1 files in the same directory where the input files are:
 - *bracken_merged_genus.csv*: contains table for all samples with bracken relative abundances, read counts and taxonimic assignments
 
 
-**Q: do the same for the family and the phylum.**
+**Q: do the same for the species, family and the phylum.**
 
 <details>
 <summary>
@@ -122,6 +126,7 @@ HINT
 </summary>
 
 ```bash
+python3 HELPER/combine_bracken_outputs.py --files READBASED/BRACKEN/SRR152765*_species_filtered.bracken -o READBASED/BRACKEN/bracken_merged_species.csv
 python3 HELPER/combine_bracken_outputs.py --files READBASED/BRACKEN/SRR152765*_family_filtered.bracken -o READBASED/BRACKEN/bracken_merged_family.csv
 python3 HELPER/combine_bracken_outputs.py --files READBASED/BRACKEN/SRR152765*_phylum_filtered.bracken -o READBASED/BRACKEN/bracken_merged_phylum.csv
 ```
