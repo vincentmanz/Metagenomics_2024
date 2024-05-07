@@ -145,7 +145,8 @@ Open the resulting HTML file.
 Have a look at the QC report with your favourite browser.  
 
 After inspecting the output, it should be clear that we need to do some trimming.  
-__What kind of trimming do you think should be done?__
+
+**Q: What kind of trimming do you think should be done?**
 
 
 
@@ -245,7 +246,7 @@ To downoload the **datasets** package, you need to have an account in the [NCBI 
 ```bash
 mkdir HOST_MAPPING
 
-./HOST_MAPPING/datasets download genome accession GCA_011037195.1 --include gff3,rna,cds,protein,genome,seq-report --filename Triatoma_infestans.fasta.zip
+datasets download genome accession GCA_011037195.1 --include gff3,rna,cds,protein,genome,seq-report --filename Triatoma_infestans.fasta.zip
 unzip HOST_MAPPING/Triatoma_infestans.fasta.zip
 ```
 

@@ -174,11 +174,16 @@ HINT
 </summary>
 
 ```r
-# bar plot phyla relative abundances
+ggplot(genus_level, aes(x=Sample, y=rel_abun)) +
+  geom_bar(stat="identity", position="stack", aes(fill=name)) + # chose bar plot
+  theme(axis.text.x = element_text(angle=45, hjust=1)) + # put x-axis label at 45 degree angle
+  facet_grid(. ~ Time, scales="free_x",space = "free_x") +# produce two panels according to metatadata category 'Time' 
+  guides(fill = FALSE)
 ggplot(family_level, aes(x=Sample, y=rel_abun)) +
   geom_bar(stat="identity", position="stack", aes(fill=name)) + # chose bar plot
   theme(axis.text.x = element_text(angle=45, hjust=1)) + # put x-axis label at 45 degree angle
-  facet_grid(. ~ Time, scales="free_x",space = "free_x") # produce two panels according to metatadata category 'Time' 
+  facet_grid(. ~ Time, scales="free_x",space = "free_x") + # produce two panels according to metatadata category 'Time' 
+  guides(fill = FALSE)
 ```
 
 </details>  
@@ -204,14 +209,12 @@ Another way to visualize the relative abundances is by creating a bubble plot. L
 
 ```r
 # bubble plot
-brel_fam_gg1 <- brel_fam %>% gather(key="Sample",value="rel_abun",-taxa)
-brel_fam_gg1 <- left_join(brel_fam_gg1,meta,by="Sample")
-
-ggplot(brel_fam_gg1, aes(x=Sample, y=taxa)) +
-  geom_point(aes(size=rel_abun, color=timepoint), alpha=0.7) + # this time we use points
+ggplot(phylum_level, aes(x=Sample, y=name)) +
+  geom_point(aes(size=rel_abun, color=Type), alpha=0.7) + # this time we use points
   theme(axis.text.x = element_text(angle=45, hjust=1)) +
-  scale_size_continuous(limits = c(0.00001,max(brel_phy_gg1$rel_abun))) + # sets minimum above '0' 
-  facet_grid(. ~ mocktreat, scales="free_x",space = "free_x")
+  scale_size_continuous(limits = c(0.00001,max(phylum_level$rel_abun))) + # sets minimum above '0'
+  facet_grid(. ~ Time, scales="free_x",space = "free_x")
+
 ```
 ![bubble](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/bubble_plot.png)
 
@@ -223,7 +226,7 @@ ggplot(brel_fam_gg1, aes(x=Sample, y=taxa)) +
 HINT
 </summary>
 
-> A: Now we produced panels according to Time and colored according to Type. This plot allows us to combine multiple metadata layers. 
+> A: Now we produced panels according to Time and colored according to Type. This plot allows us to combine multiple metadata layers. Can you see the change for Enterococcus? 
 
 </details>  
 
@@ -235,25 +238,41 @@ Let’s create a heatmap of the 20 most abundant spexies in our samples.
 
 
 ```r
+
 # sort species by abundance across samples and select top 20
-phylum_frac_reduce <- phylum_frac %>% select(-taxonomy_id, -taxonomy_lvl)
-phylum_level_abundance <-  phylum_frac_reduce[order(rowSums(select_if(phylum_frac, is.numeric)),decreasing=T),] %>%
-  head(20) %>% as_tibble() %>% 
-  column_to_rownames( "name")
+genus_level_abundance <- genus_frac %>% select(-taxonomy_id, -taxonomy_lvl) %>% head(20) %>% as_tibble() %>%  column_to_rownames( "name")
+phylum_level_abundance <- phylum_frac %>% select(-taxonomy_id, -taxonomy_lvl) %>% head(20) %>% as_tibble() %>%  column_to_rownames( "name")
+
 
 # shape the metadata
-meta_h <- subset(meta, SRA.identifier %in% colnames(phylum_level_abundance)) %>%  as_tibble() %>% 
-  column_to_rownames("SRA.identifier") # shoft the 'Sample' column to rownames
+meta_h <- subset(meta, SRA.identifier %in% colnames(genus_level_abundance)) %>%  as_tibble() %>% 
+  column_to_rownames("Sample") # shoft the 'Sample' column to rownames
+meta_p <- subset(meta, SRA.identifier %in% colnames(phylum_level_abundance)) %>%  as_tibble() %>% 
+  column_to_rownames("Sample") # shoft the 'Sample' column to rownames
+
+column_name <- meta_h %>% rownames_to_column() %>%  arrange(row_number(SRA.identifier)) %>% pull(rowname)
+colnames(genus_level_abundance) <- column_name
+colnames(phylum_level_abundance) <- column_name
+
+
 
 # plot the heatmap
+pheatmap::pheatmap(genus_level_abundance,
+                   cluster_rows = TRUE,
+                   cluster_cols = TRUE,
+                   annotation_col = meta_h[,c(2,3,4,5)],
+                   annotation_names_col=TRUE)
+
 pheatmap::pheatmap(phylum_level_abundance,
                    cluster_rows = TRUE,
                    cluster_cols = TRUE,
-                   annotation_col = meta_h[,c(3,4,5)],
+                   annotation_col = meta_h[,c(2,3,4,5)],
                    annotation_names_col=TRUE)
+
 ```
-!!!! change the name of the X axis. 
-https://telatin.github.io/microbiome-bioinformatics/data/kraken-r/2021-03-33-ExploreMGprofiles_solutions.html
+![bubble](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/heatmap_phy.png)
+
+
 **Q: what can you learn from the heatmap. Are there any informative clusters?**
 
 <details>
@@ -261,9 +280,12 @@ https://telatin.github.io/microbiome-bioinformatics/data/kraken-r/2021-03-33-Exp
 HINT
 </summary>
 
-> A: We can see that 4 species dominate the communities in most samples. Adding the metadata we can also see that data do not cluster strongly according to group or time point, but there is some degree of structuring in mocktreat.
+> A: We can see that 3 phylum dominate the communities in most samples. Adding the metadata we can also see that data do not cluster strongly according to group or time point, but there is some degree of structuring.
 
 </details>  
+
+
+
 
 #### 5. Beta diversity
 

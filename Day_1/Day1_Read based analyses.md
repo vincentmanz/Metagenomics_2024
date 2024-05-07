@@ -91,11 +91,11 @@ do
     python3 HELPER/filter_bracken.out.py \
     --input READBASED/BRACKEN/SRR15276"$i"_genus.bracken \
     -o READBASED/BRACKEN/SRR15276"$i"_genus_filtered.bracken \
-    --exclude  9604
+    --exclude  9605
         python3 HELPER/filter_bracken.out.py \
     --input READBASED/BRACKEN/SRR15276"$i"_family.bracken \
     -o READBASED/BRACKEN/SRR15276"$i"_family_filtered.bracken \
-    --exclude  9605
+    --exclude  9604
         python3 HELPER/filter_bracken.out.py \
     --input READBASED/BRACKEN/SRR15276"$i"_phylum.bracken \
     -o READBASED/BRACKEN/SRR15276"$i"_phylum_filtered.bracken \
@@ -107,12 +107,22 @@ Finally, we are going to combine the abundance estimation for each sample into a
 
 ```bash 
 python3 HELPER/combine_bracken_outputs.py --files READBASED/BRACKEN/SRR152765*_genus_filtered.bracken -o READBASED/BRACKEN/bracken_merged_genus.csv
+```
+
+This produces 1 files in the same directory where the input files are:
+
+- *bracken_merged_genus.csv*: contains table for all samples with bracken relative abundances, read counts and taxonimic assignments
+
+
+**Q: do the same for the family and the phylum.**
+
+<details>
+<summary>
+HINT
+</summary>
+
+```bash
 python3 HELPER/combine_bracken_outputs.py --files READBASED/BRACKEN/SRR152765*_family_filtered.bracken -o READBASED/BRACKEN/bracken_merged_family.csv
 python3 HELPER/combine_bracken_outputs.py --files READBASED/BRACKEN/SRR152765*_phylum_filtered.bracken -o READBASED/BRACKEN/bracken_merged_phylum.csv
 ```
-
-This produces 2 files in the same directory where the input files are:
-
-- *merged_rel_abund.csv*: contains table for all samples with bracken relative abundances and taxonimic assignments
-- *merged_read_numbers.csv*: contains table for all samples with bracken read counts and taxonimic assignments
-
+</details> 

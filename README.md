@@ -15,7 +15,7 @@ The course will be held in Pontificia Universidad Católica del Ecuador, The cou
 ### Day 1
 
 * Introduction
-* Working with command line
+* Read QC and host mapping
 * Read based analysis
 
 ### Day 2
@@ -25,7 +25,8 @@ The course will be held in Pontificia Universidad Católica del Ecuador, The cou
 
 ### Day 3
 
-* Assembly QC
+* Assembly evaluation
+* Introduction to binning
 * Genome-resolved metagenomics
 
 ## Target group
@@ -36,3 +37,4 @@ QA/QC of the raw sequence data, cleaning and assembly; Gene-by-gene annotation; 
 
 ## Requirements
 Basic knowledge of Linux/Unix command line and R programming.
+For R programming please refer to the course on [Software Carpentry](https://software-carpentry.org/lessons/)
