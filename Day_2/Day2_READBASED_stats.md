@@ -306,6 +306,7 @@ abundances(pseq)
 p <- plot_landscape(pseq, method = "NMDS", distance = "bray", col = "Time", size = 3)
 print(p)
 ```
+![association](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/pcq.png)
 
 
 ### Estimating associations with an external variable
@@ -338,7 +339,7 @@ par(mar = c(3, 14, 2, 1))
 barplot(sort(top.coef), horiz = T, las = 1, main = "Top taxa")
 ```
 
-[association](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/associations.png)
+![association](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/associations.png)
 
 Enterococcus (Firmicutes), which plays a crucial role in metabolic adaptability against pathogenic or plant toxins and anti-herbivore defense, was found to be one of the predominant gut microorganism of lepidopteran insects, including B. mori, Helicoverpa zea, and Porthetria dispar (Paniagua Voirol et al., 2018; Zhang et al., 2022). 
 
