@@ -24,11 +24,12 @@ library(dplyr)
 library(hrbrthemes)
 library(tibble)
 library(tidyverse)
+library(vegan)
 
 library(mia)
 
 library(tidyverse)
-library(vegan)
+
 library(ggplot2)
 library(knitr)
 library(phyloseq)
@@ -256,6 +257,106 @@ Enterococcus_abund_plot <- ggplot(Enterococcus_abun_df_meta, aes(x = as.numeric(
 ###  Exercises Normalization (optional) 
 
 **Transformations** The data contains read counts. We can convert these into relative abundances and other formats. Compare abundance of a given taxonomic group using the example data before and after the compositionality transformation (with a cross-plot, for instance). You can also compare the results to CLR-transformed data (see e.g. Gloor et al. 2017)
+
+
+
+
+# Alpha diversity
+
+
+
+
+
+```r
+pseq <- aggregate_rare(merged_metagenomes, level = "Species", detection = 0.1/100, prevalence = 50/100)
+
+tab <-microbiome::alpha(pseq, index = "all")
+kable(head(tab))
+```
+```r
+tab <- richness(pseq)
+kable(head(tab))
+```
+
+```r
+p.shannon <- boxplot_alpha(pseq, 
+                           index = "shannon",
+                           x_var = "Type",
+                          fill.colors = c(Control="cyan4", T._cruzi="deeppink4",T._rangeli="darkorange1" ))
+p.shannon
+```
+
+
+
+![shanon](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/shanon.png)
+
+
+
+
+
+### Investigate the top factors
+
+Show coefficients for the top taxa separating the groups
+
+```r
+pseq <- aggregate_rare(merged_metagenomes, level = "Genus", detection = 0.1/100, prevalence = 50/100)
+pseq <- microbiome::transform(pseq, transform = "compositional")
+abundances(pseq)
+
+p <- plot_landscape(pseq, method = "NMDS", distance = "bray", col = "Time", size = 3)
+print(p)
+```
+
+
+### Estimating associations with an external variable
+Next to visualizing whether any variable is associated with differences between samples, we can also quantify the strength of the association between community composition (beta diversity) and external factors.
+
+The standard way to do this is to perform a so-called permutational multivariate analysis of variance (PERMANOVA). This method takes as input the abundance table, which measure of distance you want to base the test on and a formula that tells the model how you think the variables are associated with each other.
+
+
+```r
+otu <- abundances(pseq)
+meta <- meta(pseq)
+
+permanova <- adonis(t(otu) ~ Time,
+                    data = meta, permutations=9999, method = "euclidean")
+```
+
+# P-value
+```r
+print(as.data.frame(permanova$aov.tab))
+```
+
+The time variable is significantly associated with microbiota composition (p-value is below 0.05).
+
+We can, however, visualize those taxa whose abundances drive the differences between cohorts. We first need to extract the model coefficients of taxa:
+
+```r
+coef <- coefficients(permanova)["Time1",]
+top.coef <- coef[rev(order(abs(coef)))[1:20]]
+par(mar = c(3, 14, 2, 1))
+barplot(sort(top.coef), horiz = T, las = 1, main = "Top taxa")
+```
+
+[association](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/associations.png)
+
+Enterococcus (Firmicutes), which plays a crucial role in metabolic adaptability against pathogenic or plant toxins and anti-herbivore defense, was found to be one of the predominant gut microorganism of lepidopteran insects, including B. mori, Helicoverpa zea, and Porthetria dispar (Paniagua Voirol et al., 2018; Zhang et al., 2022). 
+
+Rhodococcus in the triatomine gut are believed to play an important role in the metabolism of the vector, such as by participating in the synthesis of group B vitamins or by being digested by the bugs directly to provide missing nutrients (Sassera et al., 2013). Moreover, the most attractive aspect is the host-symbiont relationship between triatomines and Rhodococcus; since Rhodococcus bacteria can be easily cultured and genetically modified to harm the pathogen in vector gut, they are probably suitable tools for the control of trypanosomiasis (Sassera et al., 2013). A
+
+
+Exercises
+Community-level comparisons: Use PERMANOVA to investigate whether the community composition differs between two groups of individuals (e.g. times, or some other grouping of your choice). You can also include covariates such as age and gender, and see how this affects the results.
+
+
+
+
+
+
+
+
+
+
 
 
 
