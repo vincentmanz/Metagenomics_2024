@@ -216,10 +216,6 @@ adonis2(species_frac_filtered_dist ~ Time, data = as.data.frame(nmds_spec_gg))
 
 # reformat table taxa: https://carpentries-lab.github.io/metagenomics-analysis/07-phyloseq/index.html
 
-library(microbiome)
-library(knitr)
-library(tidyverse)
-
 
 merged_metagenomes <- import_biom("READBASED/merge_species.biom")
 meta <- read.csv(file = "../../Metagenomics_2024/DATA/tryp_metadata.csv", sep = ",")

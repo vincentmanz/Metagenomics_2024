@@ -18,14 +18,22 @@ In R studio.
 
 ### Load libraries
 
-```R
+```r
+library(microbiome)
+library(dplyr)
+library(hrbrthemes)
+library(tibble)
+library(tidyverse)
+
+library(mia)
+
 library(tidyverse)
 library(vegan)
-library(coin)
-library(pheatmap)
 library(ggplot2)
-library(microbiome)
+library(knitr)
+library(phyloseq)
 
+library(gcookbook)
 ```
 
 
@@ -35,118 +43,219 @@ First we need to load our data. Usually the biggest bottleneck between raw data 
 
 Let’s first load the relative abundance table of the bracken results.
 
-```R
-bracken_species <- read.csv(file = "READBASED/BRACKEN/bracken_merged_species.csv", sep = "\t") 
-bracken_genus <- read.csv(file = "READBASED/BRACKEN/bracken_merged_genus.csv", sep = "\t") 
-bracken_family <- read.csv(file = "READBASED/BRACKEN/bracken_merged_family.csv", sep = "\t") 
-bracken_phylum <- read.csv(file = "READBASED/BRACKEN/bracken_merged_phylum.csv", sep = "\t") 
+For this part we are using the [phyloseq](https://joey711.github.io/phyloseq/) package. The phyloseq package is a tool to import, store, analyze, and graphically display complex phylogenetic sequencing data that has already been clustered into Operational Taxonomic Units (OTUs), especially when there is associated sample data, phylogenetic tree, and/or taxonomic assignment of the OTUs. 
 
-meta <- read.csv(file = "../../Metagenomics_2024/DATA/tryp_metadata.csv", sep = ",")
+```R
+merged_metagenomes <- import_biom("READBASED/merge_species.biom") 
+meta <- read.csv(file = "DATA/tryp_metadata.csv", sep = ",")
 ```
 
-
-#### 2. Basic stats
-
-Before we start anything, let’s just check out or data a little bit (sanity check). Never go blind into your analyses.
-
-**Q: How many samples do we have in the metadata and in out data tibble**
-
-<details>
-<summary>
-HINT
-</summary>
-
-> nrow(meta)
-
-</details>  
-
-**Q: How many families were detected in our dataset?**
-
-<details>
-<summary>
-HINT
-</summary>
-
-> nrow(bracken_merged)
-
-</details>  
-
-**Q: Look at the data frame is ther some problem with the taxonomy**
-
-<details>
-<summary>
-HINT
-</summary>
-
->  The family level has been recoded automatically form F for family to FALSE. 
-
-</details>  
-
-
-
-#### 3. Pre-process data
-
-Now that we know a little bit about our data we can start selecting what we want to look at. Let’s extract a separate tibble for species, family and phylum level. At each tibble we remove all the taxa that are not present in any of the samples.
-
-Let’s start with species:
+#### 2. format the data
 
 ```r
+meta <- meta  %>%  arrange(row_number(SRA.identifier)) # sort the data frame
+merged_metagenomes@sam_data <- sample_data(meta) # associate the metadata to the to the phyloseq object
+column_name <-  meta %>% pull(Sample) # extract the sample names
+sample_names(merged_metagenomes) <- column_name # associate the sample names to the phyloseq object
 
-
-# Change "FALSE" to "F" in the column "taxonomy_lvl"
-bracken_family$taxonomy_lvl <- ifelse(bracken_family$taxonomy_lvl == "FALSE", "F", bracken_family$taxonomy_lvl)
-
-# Select columns ending with ".bracken_num" for bracken_merged_reads
-species_reads <- bracken_species[grep("\\.bracken_num$", names(bracken_species))]
-genus_reads <- bracken_genus[grep("\\.bracken_num$", names(bracken_genus))]
-family_reads <- bracken_family[grep("\\.bracken_num$", names(bracken_family))]
-phylum_reads <- bracken_phylum[grep("\\.bracken_num$", names(bracken_phylum))]
-
-# Select columns ending with ".bracken_frac" for bracken_merged_frac
-species_frac <- bracken_species[grep("\\.bracken_frac$", names(bracken_species))]
-genus_frac <- bracken_genus[grep("\\.bracken_frac$", names(bracken_genus))]
-family_frac <- bracken_family[grep("\\.bracken_frac$", names(bracken_family))]
-phylum_frac <- bracken_phylum[grep("\\.bracken_frac$", names(bracken_phylum))]
-
-# Remove the suffixes from the column names
-colnames(species_reads) <- sub("\\_species_filtered.bracken_num$", "", colnames(species_reads))
-colnames(species_frac) <- sub("\\_species_filtered.bracken_frac$", "", colnames(species_frac))
-colnames(genus_reads) <- sub("\\_genus_filtered.bracken_num$", "", colnames(genus_reads))
-colnames(genus_frac) <- sub("\\_genus_filtered.bracken_frac$", "", colnames(genus_frac))
-colnames(family_reads) <- sub("\\_family_filtered.bracken_num$", "", colnames(family_reads))
-colnames(family_frac) <- sub("\\_family_filtered.bracken_frac$", "", colnames(family_frac))
-colnames(phylum_reads) <- sub("\\_phylum_filtered.bracken_num$", "", colnames(phylum_reads))
-colnames(phylum_frac) <- sub("\\_phylum_filtered.bracken_frac$", "", colnames(phylum_frac))
-
-
-# Add name, taxonomy_id, and taxonomy_lvl to both data frames
-species_reads <- cbind(bracken_species[, c("name", "taxonomy_id", "taxonomy_lvl")], species_reads)
-species_frac <- cbind(bracken_species[, c("name", "taxonomy_id", "taxonomy_lvl")], species_frac)
-genus_reads <- cbind(bracken_genus[, c("name", "taxonomy_id", "taxonomy_lvl")], genus_reads)
-genus_frac <- cbind(bracken_genus[, c("name", "taxonomy_id", "taxonomy_lvl")], genus_frac)
-family_reads <- cbind(bracken_family[, c("name", "taxonomy_id", "taxonomy_lvl")], family_reads)
-family_frac <- cbind(bracken_family[, c("name", "taxonomy_id", "taxonomy_lvl")], family_frac)
-phylum_reads <- cbind(bracken_phylum[, c("name", "taxonomy_id", "taxonomy_lvl")], phylum_reads)
-phylum_frac <- cbind(bracken_phylum[, c("name", "taxonomy_id", "taxonomy_lvl")], phylum_frac)
-head(phylum_frac)
-
-# filter data
-species_frac_filtered <- subset(species_frac, taxonomy_lvl == "S") %>% 
-  select(-c("taxonomy_id","taxonomy_lvl")) %>%
-  filter(rowSums(select_if(., is.numeric)) >= 0.001)
-genus_frac_filtered <- subset(genus_frac, taxonomy_lvl == "G") %>% 
-  select(-c("taxonomy_id","taxonomy_lvl")) %>%
-  filter(rowSums(select_if(., is.numeric)) >= 0.001)
-head(genus_frac_filtered)
-family_frac_filtered <- subset(family_frac, taxonomy_lvl == "F") %>% 
-  select(-c("taxonomy_id","taxonomy_lvl")) %>%
-  filter(rowSums(select_if(., is.numeric)) >= 0.001)
-head(family_frac_filtered)
-phylum_frac_filtered <- subset(phylum_frac, taxonomy_lvl == "P") %>% 
-  select(-c("taxonomy_id","taxonomy_lvl")) %>%
-  filter(rowSums(select_if(., is.numeric)) >= 0.001)
-head(phylum_frac_filtered)
+merged_metagenomes@tax_table@.Data <- substring(merged_metagenomes@tax_table@.Data, 4) # remove the unnecessary 'k_' in the taxonomy.
+colnames(merged_metagenomes@tax_table@.Data)<- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species") # change the rank name 
 ```
+
+
+#### 3. Basic stats
+
+Before we start anything, let’s just check out or data a little bit (sanity check). Never go blind into your analyses.
+ 
+
+Dimensionality tells us how many taxa and samples the data contains. As we can see, there are 405 taxa and 30 samples.
+
+```r
+dim(abundances(merged_metagenomes))
+```
+
+The *merged_metagenomes* contains a taxonomic table. This includes taxonomic information for each of the 405 entries. With the head() command, we can print just the beginning of the table.
+
+```r
+head(tax_table(merged_metagenomes))
+```
+
+</details>  
+
+**Q: How many species are detected in our dataset?**
+
+<details>
+<summary>
+HINT
+</summary>
+
+> XXX
+
+</details>  
+
+**Q: Look at the taxonomy  is ther some problem with the taxonomy?**
+
+<details>
+<summary>
+HINT
+</summary>
+
+>  We have contaminant in the data. 
+
+</details>  
+
+**Q: what are the taxa with the more abundant reads?**
+
+<details>
+<summary>
+HINT
+</summary>
+
+>  XXXX
+
+</details> 
+
+Additional information. 
+
+```r
+head(otu_table(merged_metagenomes))
+head(tax_table(merged_metagenomes))
+head(sample_data(merged_metagenomes))
+sample_variables(merged_metagenomes)
+
+summarize_phyloseq(merged_metagenomes)
+```
+
+#### Aggregation
+
+Microbial species can be called at multiple taxonomic resolutions. We can easily agglomerate the data based on taxonomic ranks. Here, we agglomerate the data at Family level.
+
+```r
+merged_metagenomes_family <- aggregate_rare(merged_metagenomes, level = "Family", detection = 0/100, prevalence = 0/100) # no filter except family
+# Show dimensionality
+dim(abundances(merged_metagenomes_family))
+
+```
+Now there are 53 taxa and 30 samples, meaning that there are 53 different Phylum level taxonomic groups. Looking at the rowData after agglomeration shows all Enterococcaceae are combined together, and all lower rank information is lost.
+
+From the assay we can see that all abundances of taxa that belong to Enterococcaceae are summed up.
+
+```r
+knitr::kable(head(tax_table(merged_metagenomes_family))) %>% 
+  kableExtra::kable_styling("striped", 
+                            latex_options="scale_down") %>% 
+  kableExtra::scroll_box(width = "100%")
+```
+
+
+### 4. Pre-process data
+
+Now that we know a little bit about our data we can start the pre-processing. 
+
+We have observed 2 contaminants Homo sapiens and XXXX
+
+
+```r
+# remove contaminants
+contaminants <- c("9606", 300028)
+allTaxa = taxa_names(merged_metagenomes)
+allTaxa <- allTaxa[!(allTaxa %in% contaminants)]
+merged_metagenomes = prune_taxa(allTaxa, merged_metagenomes)
+head(tax_table(merged_metagenomes))
+```
+
+Now recheck that your data are clean before continuing the analysis. 
+
+### 5. Microbiome composition
+
+Microbial abundances are typically ‘compositional’ (relative) in the current microbiome profiling data sets. This is due to technical aspects of the data generation process (see e.g. Gloor et al., 2017).
+
+The next example calculates relative abundances as these are usually easier to interpret than plain counts. For some statistical models we need to transform the data into other formats as explained in above link (and as we will see later).
+
+
+```r
+pseq <- aggregate_rare(merged_metagenomes, level = "Family", detection = 0.1/100, prevalence = 50/100)
+
+pseq <- microbiome::transform(pseq, transform = "compositional")
+```
+
+
+**Q: what is the meaning and effect of compositional?**
+
+<details>
+<summary>
+HINT
+</summary>
+
+>  abundances(pseq)
+
+</details>  
+
+
+#### Visualization
+
+**Bar plot** are useful to have a broad look at the data. 
+
+```r
+p <- plot_composition(pseq,
+                      taxonomic.level = "Family",
+                      sample.sort = "Sample",
+                      x.label = "Sample") +
+  scale_fill_brewer("Family", palette = "Paired") +
+  guides(fill = guide_legend(ncol = 1)) +
+  scale_y_percent() +
+  labs(x = "Samples", y = "Relative abundance (%)",
+       title = "Relative abundance data") + 
+  theme_ipsum(grid="Y") +
+  theme(axis.text.x = element_text(angle=90, hjust=1),
+        legend.text = element_text(face = "italic"))
+print(p)  
+```
+
+![barplot](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/barplot_family.png)
+
+**Q: Does the profiles look similar between samples? Can you spot any trends?**
+
+<details>
+<summary>
+HINT
+</summary>
+
+> A: We see that the same one or two OTU dominates all samples but there is some variability between samples. We can observe some trend on the Entrococcus proption over time.
+
+</details>  
+
+
+*If you have time you can also visualize the other taxonomic levels (e.g. species) with the same approach. Try to come up with the code yourself.*
+
+
+**Density plot** shows the overall abundance distribution for a given taxonomic group. Let us check the relative abundance of Enterococcus across the sample collection. The density plot is a smoothened version of a standard histogram.
+
+```r
+pseq <- microbiome::transform(merged_metagenomes, "compositional")
+Enterococcus_abun = prune_taxa("1351", pseq)
+Enterococcus_abun_df <- t(abundances(Enterococcus_abun)) 
+Enterococcus_abun_df <- rownames_to_column(as.data.frame(Enterococcus_abun_df), var = "Sample") %>% arrange(Sample)
+meta_df <- meta %>% arrange(Sample)
+Enterococcus_abun_df_meta <- merge(Enterococcus_abun_df, meta_df, by = "Sample", all = TRUE) %>% select("Time", "Morning.Afternoon", "Type", "1351") %>% filter(Morning.Afternoon == "AM") %>% select(-c("Morning.Afternoon", "Time")) 
+Enterococcus_abun_df_meta$"1351" <- Enterococcus_abun_df_meta$"1351"*100
+colnames(Enterococcus_abun_df_meta) <- c("Type", "Enterococcus")
+
+Enterococcus_abund_plot <- ggplot(Enterococcus_abun_df_meta, aes(x = as.numeric(Enterococcus), color = Type, fill = Type)) + 
+  geom_density(alpha = 0.3) + 
+  labs(x = "Relative abundance", title = "Enterococcus") +
+  theme_classic()
+  
+```
+
+![density_plot](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/density_Entero.png
+
+
+
+
+
+
+
 
 **Q Can you come up with the command for family (S) and phylum (P) level?**
 
@@ -404,14 +513,6 @@ ggplot(nmds_spec_gg, aes(x=MDS1,y=MDS2)) +
   ggtitle("NMDS colored according to Type")
 ```
 ![nmds_type](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_type.png)
-
-
-
-
-
-kraken-biom READBASED/SRR152765*.kraken_report_bracken_species.out -o READBASED/merge_species.biom --fmt json -v
-
-kraken-biom READBASED/BRACKEN/SRR152765*_species_filtered.bracken -o READBASED/merge_species.biom --fmt json -v
 
 
 
