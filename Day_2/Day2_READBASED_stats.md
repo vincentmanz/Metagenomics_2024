@@ -353,7 +353,8 @@ HINT
 p <- plot_composition(pseq,
                       taxonomic.level = "Family",
                       sample.sort = "Sample",
-                      x.label = "Sample") +
+                      x.label = "Sample",
+                      group_by = Time) +
   scale_fill_brewer("Family", palette = "Paired") +
   guides(fill = guide_legend(ncol = 1)) +
   scale_y_percent() +
@@ -381,29 +382,27 @@ HINT
 
 *If you have time you can also visualize the other taxonomic levels (e.g. species) with the same approach. Try to come up with the code yourself.*
 
-
-**Density plot** shows the overall abundance distribution for a given taxonomic group. Let us check the relative abundance of Enterococcus across the sample collection. The density plot is a smoothened version of a standard histogram.
-
 ```r
-pseq <- microbiome::transform(merged_metagenomes, "compositional")
-Enterococcus_abun = prune_taxa("1351", pseq)
-Enterococcus_abun_df <- t(abundances(Enterococcus_abun)) 
-Enterococcus_abun_df <- rownames_to_column(as.data.frame(Enterococcus_abun_df), var = "Sample") %>% arrange(Sample)
-meta_df <- meta %>% arrange(Sample)
-Enterococcus_abun_df_meta <- merge(Enterococcus_abun_df, meta_df, by = "Sample", all = TRUE) %>% select("Time", "Morning.Afternoon", "Type", "1351") %>% filter(Morning.Afternoon == "AM") %>% select(-c("Morning.Afternoon", "Time")) 
-Enterococcus_abun_df_meta$"1351" <- Enterococcus_abun_df_meta$"1351"*100
-colnames(Enterococcus_abun_df_meta) <- c("Type", "Enterococcus")
+pseq <- aggregate_rare(merged_metagenomes, level = "Genus", detection = 0.1/100, prevalence = 50/100)
+pseq <- microbiome::transform(pseq, transform = "compositional")
 
-Enterococcus_abund_plot <- ggplot(Enterococcus_abun_df_meta, aes(x = as.numeric(Enterococcus), color = Type, fill = Type)) + 
-  geom_density(alpha = 0.3) + 
-  labs(x = "Relative abundance", title = "Enterococcus") +
-  theme_classic()
-  
+p <- plot_composition(pseq,
+                      taxonomic.level = "Genus",
+                      sample.sort = "Sample",
+                      x.label = "Sample",
+                      group_by = "Type") +
+  scale_fill_brewer("Genus", palette = "Paired") +
+  guides(fill = guide_legend(ncol = 1)) +
+  scale_y_percent() +
+  labs(x = "Samples", y = "Relative abundance (%)",
+       title = "Relative abundance data") + 
+  theme_ipsum(grid="Y") +
+  theme(axis.text.x = element_text(angle=90, hjust=1),
+        legend.text = element_text(face = "italic"))
+print(p)
 ```
 
-![alpha_plot](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/density_Entero.png)
-*Alpha diversity is calculated according to fish diversity in a pond. Here, alpha diversity is represented in its simplest way: Richness.*
-
+![barplot](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/barplot_genus.png)
 
 # Diversity
 
@@ -413,11 +412,11 @@ Species diversity, in its simplest definition, is the number of species in a par
 - *α* Diversity: Can be represented only as richness (, i.e., the number of different species in an environment), or it can be measured considering the abundance of the species in the environment as well (i.e., the number of individuals of each species inside the environment). To measure α-diversity, we use indexes such as Shannon’s, Simpson’s, Chao1, etc.
 
 ![density_plot](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/diversity1.png)
+*Alpha diversity is calculated according to fish diversity in a pond. Here, alpha diversity is represented in its simplest way: Richness.*
 
 In the next example, we will look at the α and the β components of the diversity of a dataset of fishes in three lakes. The most simple way to calculate the β-diversity is to calculate the distinct species between two lakes (sites). Let us take as an example the diversity between Lake A and Lake B. The number of species in Lake A is 3. To this quantity, we will subtract the number of these species that are shared with the Lake B: 2. So the number of unique species in Lake A compared to Lake B is (3-2) = 1. To this number, we will sum the result of the same operations but now take Lake B as our reference site. In the end, the β diversity between Lake A and Lake B is (3-2) + (3-2) = 2. This process can be repeated, taking each pair of lakes as the focused sites.
 
 ![density_plot](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/diversity2.png)
-
 *Alpha and beta diversity indexes of fishes in a pond.*
 
 - *β* diversity mesures how different two or more communities are, either in their composition (richness) or in the abundance of the organisms that compose it (abundance).
