@@ -198,6 +198,22 @@ plot_read_distribution(merged_metagenomes, "Type", plot.type = "density")
 *You can try to plot with diffrent metadata.*
 
 
+Plotting the read count per sample
+
+```r
+df <- psmelt(merged_metagenomes)  %>%  group_by(Sample, Time) %>%  
+  summarise(sum_reads = sum(Abundance)) %>% arrange(sum_reads) 
+
+ggplot(df) +
+  geom_bar(aes(reorder(Sample, -sum_reads), sum_reads, fill=Time),
+           col="red", alpha = .2, stat="identity") 
+
+```
+
+
+![density](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/reads_count.png)
+
+
 #### Prevalence - Detection 
 
 
