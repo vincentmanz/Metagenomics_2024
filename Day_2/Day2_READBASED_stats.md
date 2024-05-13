@@ -194,7 +194,7 @@ Let us check for distribution of number of sequences retained from the Kraken/Br
 plot_read_distribution(merged_metagenomes, "Type", plot.type = "density")
 
 ```
-![density](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/density.png)
+![density](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/density_reads.png)
 
 *You can try to plot with diffrent metadata.*
 
