@@ -20,6 +20,7 @@ In R studio.
 
 ```r
 library(microbiome)
+library(microbiomeutilities)
 library(dplyr)
 library(hrbrthemes)
 library(tibble)
@@ -184,6 +185,18 @@ Now that we know a little bit about our data we can start the pre-processing.
 
 ####  Library size / read count
 
+Let us check for distribution of number of sequences retained from the Kraken/Bracken approach.
+
+
+
+```r
+plot_read_distribution(merged_metagenomes, "Type", plot.type = "density")
+
+```
+![density](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/density.png)
+
+*You can try to plot with diffrent metadata.*
+
 
 #### Prevalence - Detection 
 
@@ -202,6 +215,11 @@ The function arguments detection and count can also be used to access, how many 
 prevalence(merged_metagenomes, detection=1, sort=TRUE, count=true)
 
 plot_taxa_prevalence(merged_metagenomes, level="Phylum", detection = 10000)
+
+# alternative 
+p1 <- plot_taxa_cv(merged_metagenomes, plot.type = "scatter")
+p1 + scale_x_log10()
+
 
 ```
 
