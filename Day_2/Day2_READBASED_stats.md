@@ -492,6 +492,60 @@ p.shannon
 
 ![shanon](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/shanon.png)
 
+Alternative: 
+
+```r
+
+pseq <- aggregate_rare(merged_metagenomes, level = "Species", detection = 0.1/100, prevalence = 50/100)
+
+# get the metadata out as seprate object
+hmp.meta <- meta(pseq)
+
+# Add the rownames as a new colum for easy integration later.
+hmp.meta$sam_name <- (hmp.meta$Type)
+
+hmp.div <- microbiome::alpha(pseq)
+# Add the rownames to diversity table
+hmp.div$Sample <- rownames(hmp.div)
+
+# merge these two data frames into one
+div.df <- merge(hmp.div,hmp.meta, by = "Sample")
+
+# check the tables
+colnames(div.df)
+
+
+div.df2 <- div.df[, c("sam_name", "diversity_inverse_simpson", "diversity_gini_simpson", "diversity_shannon", "diversity_fisher")]
+
+# the names are not pretty. we can replace them
+
+colnames(div.df2) <- c("Type", "Inverse Simpson", "Gini-Simpson", "Shannon", "Fisher")
+
+# check
+colnames(div.df2)
+div_df_melt <- reshape2::melt(div.df2)
+## Using Location as id variables
+
+head(div_df_melt)
+
+library(ggpubr)
+# Now use this data frame to plot 
+p <- ggboxplot(div_df_melt, x = "Type", y = "value",
+               fill = "Type", 
+               palette = "jco", 
+               legend= "right",
+               facet.by = "variable", 
+               scales = "free")
+
+p <- p + rotate_x_text() 
+# we will remove the x axis lables
+
+p <- p + rremove("x.text")
+p
+```
+![indices](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/indices.png)
+
+
 ### Investigate the top factors
 
 Show coefficients for the top taxa separating the groups
