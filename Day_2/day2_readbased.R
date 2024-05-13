@@ -1,8 +1,46 @@
+library(microbiome)
+library(dplyr)
+library(hrbrthemes)
+library(tibble)
 library(tidyverse)
 library(vegan)
-library(coin)
-library(pheatmap)
-library(ggplot2)
+
+
+
+
+merged_metagenomes <- import_biom("READBASED/merge_species.biom") 
+meta <- read.csv(file = "METADATA//tryp_metadata.txtx.csv", sep = ",")
+
+
+meta <- meta  %>%  arrange(row_number(SRA.identifier)) # sort the data frame
+merged_metagenomes@sam_data <- sample_data(meta) # associate the metadata to the to the phyloseq object
+column_name <-  meta %>% pull(Sample) # extract the sample names
+sample_names(merged_metagenomes) <- column_name # associate the sample names to the phyloseq object
+
+merged_metagenomes@tax_table@.Data <- substring(merged_metagenomes@tax_table@.Data, 4) # remove the unnecessary 'k_' in the taxonomy.
+colnames(merged_metagenomes@tax_table@.Data)<- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species") # change the rank name 
+
+
+
+dim(abundances(merged_metagenomes))
+head(otu_table(merged_metagenomes) )
+
+
+head(psmelt(merged_metagenomes))
+ntaxa(merged_metagenomes)
+#
+get_taxa_unique(merged_metagenomes, "Family")
+
+
+
+merged_metagenomes_family <- aggregate_rare(merged_metagenomes, level = "Family", detection = 0/100, prevalence = 0/100) # no filter except family
+
+
+plot_richness(merged_metagenomes) 
+
+
+plot_taxa_prevalence(merged_metagenomes, level="Genus", detection = 0)
+
 
 bracken_species <- read.csv(file = "READBASED/BRACKEN/bracken_merged_species.csv", sep = "\t") 
 bracken_genus <- read.csv(file = "READBASED/BRACKEN/bracken_merged_genus.csv", sep = "\t") 

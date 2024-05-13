@@ -27,13 +27,10 @@ library(tidyverse)
 library(vegan)
 
 library(mia)
-
 library(tidyverse)
-
 library(ggplot2)
 library(knitr)
 library(phyloseq)
-
 library(gcookbook)
 ```
 
@@ -50,6 +47,24 @@ For this part we are using the [phyloseq](https://joey711.github.io/phyloseq/) p
 merged_metagenomes <- import_biom("READBASED/merge_species.biom") 
 meta <- read.csv(file = "DATA/tryp_metadata.csv", sep = ",")
 ```
+
+#### phyloseq-ize Data
+
+Any data already in an R session can be annoated/coerced to be recognized by phyloseq’s functions and methods. This is important, because there are lots of ways you might receive data related to a microbiome project, and not all of these will come from a popular server or workflow that is already supported by a phyloseq import function. 
+
+![phyloseq](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/phyloseq.png)
+
+- **otu_table** - Works on any numeric matrix. You must also specify if the species are rows or columns
+- **tax_table** - Works on any character matrix. The rownames must match the OTU names (taxa_names) of the otu_table if you plan to combine it with a phyloseq-object.
+- **sample_data** - Works on any data.frame. The rownames must match the sample names in the otu_table if you plan to combine them as a phyloseq-object
+
+ Let's look at the phlyseq object. 
+
+```r
+merged_metagenomes
+```
+
+We need to add the metadata to the phyloseq object. 
 
 #### 2. format the data
 
@@ -69,28 +84,36 @@ colnames(merged_metagenomes@tax_table@.Data)<- c("Kingdom", "Phylum", "Class", "
 Before we start anything, let’s just check out or data a little bit (sanity check). Never go blind into your analyses.
  
 
-Dimensionality tells us how many taxa and samples the data contains. As we can see, there are 405 taxa and 30 samples.
 
+
+Summurize the data.  
 ```r
-dim(abundances(merged_metagenomes))
+summarize_phyloseq(merged_metagenomes)
+
+head(otu_table(merged_metagenomes))
+head(tax_table(merged_metagenomes))
+head(sample_data(merged_metagenomes))
+
+sample_variables(merged_metagenomes)
+
+
 ```
 
-The *merged_metagenomes* contains a taxonomic table. This includes taxonomic information for each of the 405 entries. With the head() command, we can print just the beginning of the table.
 
 ```r
-head(tax_table(merged_metagenomes))
+head(psmelt(merged_metagenomes))
 ```
 
 </details>  
 
-**Q: How many species are detected in our dataset?**
+**Q: How many species and samples are detected in our dataset?**
 
 <details>
 <summary>
 HINT
 </summary>
 
-> XXX
+> ntaxa(merged_metagenomes), nsamples.
 
 </details>  
 
@@ -101,7 +124,7 @@ HINT
 HINT
 </summary>
 
->  We have contaminant in the data. 
+>  We have contaminant in the data. Which one? (head(psmelt(merged_metagenomes)))
 
 </details>  
 
@@ -112,19 +135,14 @@ HINT
 HINT
 </summary>
 
->  XXXX
+>  head(otu_table(merged_metagenomes))
 
 </details> 
 
-Additional information. 
+Etraction of the sample's names. 
 
 ```r
-head(otu_table(merged_metagenomes))
-head(tax_table(merged_metagenomes))
-head(sample_data(merged_metagenomes))
-sample_variables(merged_metagenomes)
-
-summarize_phyloseq(merged_metagenomes)
+sample_names(merged_metagenomes)
 ```
 
 #### Aggregation
@@ -132,14 +150,21 @@ summarize_phyloseq(merged_metagenomes)
 Microbial species can be called at multiple taxonomic resolutions. We can easily agglomerate the data based on taxonomic ranks. Here, we agglomerate the data at Family level.
 
 ```r
+
 merged_metagenomes_family <- aggregate_rare(merged_metagenomes, level = "Family", detection = 0/100, prevalence = 0/100) # no filter except family
 # Show dimensionality
 dim(abundances(merged_metagenomes_family))
 
 ```
-Now there are 53 taxa and 30 samples, meaning that there are 53 different Phylum level taxonomic groups. Looking at the rowData after agglomeration shows all Enterococcaceae are combined together, and all lower rank information is lost.
 
-From the assay we can see that all abundances of taxa that belong to Enterococcaceae are summed up.
+**Q: How many sample and tax do we have now?**
+
+<details>
+<summary>
+HINT
+</summary>
+
+> Now there are 53 taxa and 30 samples, meaning that there are 53 different Phylum level taxonomic groups. Looking at the rowData after agglomeration shows all Enterococcaceae are combined together, and all lower rank information is lost.
 
 ```r
 knitr::kable(head(tax_table(merged_metagenomes_family))) %>% 
@@ -148,17 +173,64 @@ knitr::kable(head(tax_table(merged_metagenomes_family))) %>%
   kableExtra::scroll_box(width = "100%")
 ```
 
+</details> 
 
-### 4. Pre-process data
+
+
+### 4. QC and Pre-process data
 
 Now that we know a little bit about our data we can start the pre-processing. 
 
-We have observed 2 contaminants Homo sapiens and XXXX
+
+####  Library size / read count
+
+
+#### Prevalence - Detection 
+
+
+Prevalence quantifies the frequency of samples where certain microbes were detected (above a given detection threshold). The prevalence can be given as sample size (N) or percentage (unit interval).
+
+The population prevalence (frequency) at a 1% relative abundance threshold (detection = 1/100 and count = false), can look like this.
+
+```r
+prevalence(merged_metagenomes, detection=1/100, sort=TRUE, count=FALSE)
+```
+
+The function arguments detection and count can also be used to access, how many samples do pass a threshold for raw counts. Here, the population prevalence (frequency) at the absolute abundance threshold (count=true) at read count 1 (detection = 1) is accessed.
+
+```r
+prevalence(merged_metagenomes, detection=1, sort=TRUE, count=true)
+
+plot_taxa_prevalence(merged_metagenomes, level="Phylum", detection = 10000)
+
+```
+
+Each point corresponds to a different or unique taxon. The y-axis represents the fraction of samples, these taxa are present. The low prevalence suggests there is a low overlap across samples. 
+
+![prevalence](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/prevalence.png)
+
+
+
+
+**Q: Which taxa is present in all sample at a high abundance?**
+
+<details>
+<summary>
+HINT
+</summary>
+
+> Homo sapiens
+
+</details> 
+
+
+##### Contaminant sequences
+Samples might be contaminated with exogenous sequences. We have observed 1 contaminants Homo sapiens.
 
 
 ```r
 # remove contaminants
-contaminants <- c("9606", 300028)
+contaminants <- c("9606") 
 allTaxa = taxa_names(merged_metagenomes)
 allTaxa <- allTaxa[!(allTaxa %in% contaminants)]
 merged_metagenomes = prune_taxa(allTaxa, merged_metagenomes)
@@ -167,12 +239,16 @@ head(tax_table(merged_metagenomes))
 
 Now recheck that your data are clean before continuing the analysis. 
 
+
+
 ### 5. Microbiome composition
 
 Microbial abundances are typically ‘compositional’ (relative) in the current microbiome profiling data sets. This is due to technical aspects of the data generation process (see e.g. Gloor et al., 2017).
 
 The next example calculates relative abundances as these are usually easier to interpret than plain counts. For some statistical models we need to transform the data into other formats as explained in above link (and as we will see later).
 
+*detection*: Detection threshold for absence/presence (percentage reads).
+*prevalence*: Prevalence threshold (in [0, 1]) (presence accross samples).
 
 ```r
 pseq <- aggregate_rare(merged_metagenomes, level = "Family", detection = 0.1/100, prevalence = 50/100)
@@ -263,10 +339,6 @@ Enterococcus_abund_plot <- ggplot(Enterococcus_abun_df_meta, aes(x = as.numeric(
 
 # Alpha diversity
 
-
-
-
-
 ```r
 pseq <- aggregate_rare(merged_metagenomes, level = "Species", detection = 0.1/100, prevalence = 50/100)
 
@@ -286,13 +358,7 @@ p.shannon <- boxplot_alpha(pseq,
 p.shannon
 ```
 
-
-
 ![shanon](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/shanon.png)
-
-
-
-
 
 ### Investigate the top factors
 
@@ -341,13 +407,40 @@ barplot(sort(top.coef), horiz = T, las = 1, main = "Top taxa")
 
 ![association](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/associations.png)
 
-Enterococcus (Firmicutes), which plays a crucial role in metabolic adaptability against pathogenic or plant toxins and anti-herbivore defense, was found to be one of the predominant gut microorganism of lepidopteran insects, including B. mori, Helicoverpa zea, and Porthetria dispar (Paniagua Voirol et al., 2018; Zhang et al., 2022). 
+**Enterococcus** (Bacillota), which plays a crucial role in metabolic adaptability against pathogenic or plant toxins and anti-herbivore defense, was found to be one of the predominant gut microorganism of lepidopteran insects, including B. mori, Helicoverpa zea, and Porthetria dispar (Paniagua Voirol et al., 2018; Zhang et al., 2022). 
 
-Rhodococcus in the triatomine gut are believed to play an important role in the metabolism of the vector, such as by participating in the synthesis of group B vitamins or by being digested by the bugs directly to provide missing nutrients (Sassera et al., 2013). Moreover, the most attractive aspect is the host-symbiont relationship between triatomines and Rhodococcus; since Rhodococcus bacteria can be easily cultured and genetically modified to harm the pathogen in vector gut, they are probably suitable tools for the control of trypanosomiasis (Sassera et al., 2013). A
+**Symbiopectobacterium** (Enterobacteriaceae) has recently been described for the first time as an intracellular bacterial symbiont, responsible for to the biosynthesis of vitamins and cofactors.  This bacteria may be boosting the parsite fitness, for example, by aiding in evading the Triatome immune response, or providing a novel function, such as supplementing nutrition or metabolism
+
+**Rhodococcus** (Nocardiaceae) in the triatomine gut are believed to play an important role in the metabolism of the vector, such as by participating in the synthesis of group B vitamins or by being digested by the bugs directly to provide missing nutrients (Sassera et al., 2013). Moreover, the most attractive aspect is the host-symbiont relationship between triatomines and Rhodococcus; since Rhodococcus bacteria can be easily cultured and genetically modified to harm the pathogen in vector gut, they are probably suitable tools for the control of trypanosomiasis (Sassera et al., 2013). as the blood is poor in B vitamins compared to what is generally required for insect development. The blood is poor in B vitamins compared to what is generally required for insect development, Kissing bugs, Rhodnius prolixus, notably require *Rhodococcus* bacteria for nymph development, but the addition of B vitamins in the diet can rescue nymph development in the absence of Rhodococcus  (Serrato-Salas and Gendrin 2023).
+
+**Wolbachia** (Ehrlichiaceae)  The obligate intracellular bacteria Wolbachia spp. are common in a wide range of insects, including sand flies, bed bugs, fleas and mosquitoes, and can cause reproduction alterations such as feminization, male killing and cytoplasmic incompatibility ([Landmann 20219](https://doi.org/10.1128/microbiolspec.BAI-0018-2019.)). In triatomines, Wolbachia has been solely reported for the genus Rhodnius, where it occurs in the intestine, salivary glands and gonads.
+
+**Curtobacterium** (Microbacteriaceae) 
+
 
 
 Exercises
 Community-level comparisons: Use PERMANOVA to investigate whether the community composition differs between two groups of individuals (e.g. times, or some other grouping of your choice). You can also include covariates such as age and gender, and see how this affects the results.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
