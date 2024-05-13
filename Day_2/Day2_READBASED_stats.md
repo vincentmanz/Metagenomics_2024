@@ -26,6 +26,7 @@ library(hrbrthemes)
 library(tibble)
 library(tidyverse)
 library(vegan)
+library(compositions)
 
 library(mia)
 library(tidyverse)
@@ -265,11 +266,55 @@ contaminants <- c("9606")
 allTaxa = taxa_names(merged_metagenomes)
 allTaxa <- allTaxa[!(allTaxa %in% contaminants)]
 merged_metagenomes = prune_taxa(allTaxa, merged_metagenomes)
-head(tax_table(merged_metagenomes))
 ```
 
 Now recheck that your data are clean before continuing the analysis. 
+**Q: Which taxa is present in all samples and with a high abundance?**
 
+<details>
+<summary>
+HINT
+</summary>
+
+> head(tax_table(merged_metagenomes)) or plot_taxa_prevalence(merged_metagenomes, level="Phylum", detection = 10000)
+
+</details> 
+
+#### Data transformation
+
+Data transformations are common in (microbial) ecology (Legendre2001) and used to improve compatibility with assumptions related to specific statistical methods, mitigate biases, enhance the comparability of samples or features, or to obtain more interpretable values.
+
+Examples include the logarithmic transformation, calculation of relative abundances (percentages), and compositionality-aware transformations such as the centered log-ratio transformation (clr).
+
+Let us summarize some commonly used transformations in microbiome data science; further details and benchmarkings available in the references:
+
+- *relabundance* relative transformation; also known as total sum scaling (TSS) and compositional transformation. This converts counts into percentages (at the scale [0, 1]) that sum up to. Much of the currently available taxonomic abundance data from high-throughput assays (16S, metagenomic sequencing) is compositional by nature, even if the data is provided as counts (Gloor et al. 2017).
+
+- *clr* Centered log ratio transformation (Aitchison 1986) is used to reduce data skewness and compositionality bias in relative abundances, while bringing the data to the logarithmic scale. This transformation is frequently applied in microbial ecology (Gloor et al. 2017). However, this transformation only applies to positive values. Usual solution is to add pseudocount, which adds another type of bias in the data. The robust clr transformation (‘rclr’) aims to circumvent the need to add a pseudocount. While the resulting values from these transformations are difficult interpret directly, this transformation may enhance comparability of relative differences between samples. It is part of a broader Aitchison family of transformations; the additive log ratio transformation (`alr’) is also available. The robust clr (“rclr”) is similar to regular clr (see above) but allows data with zeroes and avoids the need to add pseudocount Martino et al. (2019). See library *compositions*. 
+
+- *pa* presence/absence transformation ignores abundances and only indicates whether the given feature is detected above the given threshold (default: 0). This simple transformation is relatively widely used in ecological research. It has shown good performance in microbiome-based classification performance (Giliberti et al. 2022, Karwowska2024).
+
+- *z* Z transformation scales data to zero mean and unit variance; this us used to bring features (or samples) to more comparable levels in terms of mean and scale of the values. This can enhance visualization and interpretation of the data
+
+- *log*, *log2*, *log10* Logarithmic transformations; used e.g. to reduce data skewness; with compositional data the clr (or rclr) transformation is often preferred.
+
+- *hellinger* Hellinger transformation equals to the square root of relative abundances. This ecological transformation can be useful if we are interested in changes in relative abundances.
+
+- *rank* Rank transformation replaces each value by its rank. Also see ‘rrank’ (relative rank transformation). This has use for instance in non-parametric statistics.
+
+- Other available transformations include Chi square (‘chi.square’), Frequency transformation (‘frequency’), and Make margin sum of squares equal to one (‘normalize’)
+
+
+The data contains read counts. We can convert these into relative abundances and other formats. Compare abundance of a given taxonomic group using the example data before and after the compositionality transformation (with a cross-plot, for instance). You can also compare the results to CLR-transformed data (see e.g. Gloor et al. 2017)
+
+Have a look at the function *?microbiome::transform*.
+
+
+```r
+microbiome::transform(merged_metagenomes, transform = "compositional")
+```
+
+In order to assess the effect of the different transformations, you can use the *clr* or the *log10* for the  downstream analysis. 
 
 
 ### 5. Microbiome composition
@@ -356,19 +401,52 @@ Enterococcus_abund_plot <- ggplot(Enterococcus_abun_df_meta, aes(x = as.numeric(
   
 ```
 
-![density_plot](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/density_Entero.png)
+![alpha_plot](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/density_Entero.png)
+*Alpha diversity is calculated according to fish diversity in a pond. Here, alpha diversity is represented in its simplest way: Richness.*
 
 
+# Diversity
 
 
-###  Exercises Normalization (optional) 
+Species diversity, in its simplest definition, is the number of species in a particular area and their relative abundance (evenness). Once we know the taxonomic composition of our metagenomes, we can do diversity analyses. Here we will discuss the two most used diversity metrics, α diversity (within one metagenome) and β (across metagenomes).
 
-**Transformations** The data contains read counts. We can convert these into relative abundances and other formats. Compare abundance of a given taxonomic group using the example data before and after the compositionality transformation (with a cross-plot, for instance). You can also compare the results to CLR-transformed data (see e.g. Gloor et al. 2017)
+- *α* Diversity: Can be represented only as richness (, i.e., the number of different species in an environment), or it can be measured considering the abundance of the species in the environment as well (i.e., the number of individuals of each species inside the environment). To measure α-diversity, we use indexes such as Shannon’s, Simpson’s, Chao1, etc.
+
+![density_plot](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/diversity1.png)
+
+In the next example, we will look at the α and the β components of the diversity of a dataset of fishes in three lakes. The most simple way to calculate the β-diversity is to calculate the distinct species between two lakes (sites). Let us take as an example the diversity between Lake A and Lake B. The number of species in Lake A is 3. To this quantity, we will subtract the number of these species that are shared with the Lake B: 2. So the number of unique species in Lake A compared to Lake B is (3-2) = 1. To this number, we will sum the result of the same operations but now take Lake B as our reference site. In the end, the β diversity between Lake A and Lake B is (3-2) + (3-2) = 2. This process can be repeated, taking each pair of lakes as the focused sites.
+
+![density_plot](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/diversity2.png)
+
+*Alpha and beta diversity indexes of fishes in a pond.*
+
+- *β* diversity mesures how different two or more communities are, either in their composition (richness) or in the abundance of the organisms that compose it (abundance).
+
+- *Bray-Curtis dissimilarity*: The difference in richness and abundance across environments (samples). Weight on abundance. Measures the differences from 0 (equal communities) to 1 (different communities)
+- *Jaccard distance*: Based on the presence/absence of species (diversity). It goes from 0 (same species in the community) to 1 (no species in common)
+- *UniFrac*: Measures the phylogenetic distance; how alike the trees in each community are. There are two types, without weights (diversity) and with weights (diversity and abundance)
+There are different ways to plot and show the results of such analysis. Among others, PCA, PCoA, or NMDS analysis are widely used.
+
+![density_plot](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/diversity3.png)
+
+**Q: Which of the options below is true for the alpha diversity in lakes A, B, and beta diversity between lakes A and B, respectively?**
+
+- 4, 3, 1
+- 4, 3, 5
+- 9, 7, 16
 
 
+<details>
+<summary>
+HINT
+</summary>
+
+> 4, 3, 5 Alpha diversity in this case, is the sum of different species. Lake A has 4 different species and lake B has 3 different species. Beta diversity refers to the difference between lake A and lake B. If we use the formula in Figure 2 we can see that to calculate beta diversity, we have to detect the number of species and the number of shared species in both lakes. There is only one shared species, so we have to subtract the number of shared species to the total species and sum the result. In this case, in lake A, we have 4 different species and one shared species with lake B (4-1)=3, and in lake B we have three species and one shared species with lake A (3-1)=2. If we add 3+2, the result is 5.
+
+</details>  
 
 
-# Alpha diversity
+## Alpha diversity
 
 ```r
 pseq <- aggregate_rare(merged_metagenomes, level = "Species", detection = 0.1/100, prevalence = 50/100)
