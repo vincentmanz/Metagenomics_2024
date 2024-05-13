@@ -209,10 +209,7 @@ Each point corresponds to a different or unique taxon. The y-axis represents the
 
 ![prevalence](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/prevalence.png)
 
-
-
-
-**Q: Which taxa is present in all sample at a high abundance?**
+**Q: Which taxa is present in all samples and with a high abundance?**
 
 <details>
 <summary>
