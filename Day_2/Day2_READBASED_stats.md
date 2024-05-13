@@ -508,9 +508,15 @@ print(p)
 
 
 ### Estimating associations with an external variable
+
 Next to visualizing whether any variable is associated with differences between samples, we can also quantify the strength of the association between community composition (beta diversity) and external factors.
 
 The standard way to do this is to perform a so-called permutational multivariate analysis of variance (PERMANOVA). This method takes as input the abundance table, which measure of distance you want to base the test on and a formula that tells the model how you think the variables are associated with each other.
+
+PERMANOVA tests the hypothesis that the centroids and dispersion of the community are equivalent between the compared groups. A p-value smaller than the significance threshold indicates that the groups have a different community composition. This method is implemented with the adonis2 function from the vegan package.
+
+By default, the argument by is set to "terms", in which the order of variables in the formula matters. In this case, each variable is analyzed sequentially, and the result is different when more than 1 variable is introduced and their order differs. Therefore, it is recommended to set by = "margin", which specifies that the marginal effect of each variable is analyzed individually. You can view a comparison between the two designs in chapter ?sec-compare-permanova.
+
 
 
 ```r
@@ -529,7 +535,8 @@ print(as.data.frame(permanova$aov.tab))
 
 The time variable is significantly associated with microbiota composition (p-value is below 0.05).
 
-We can, however, visualize those taxa whose abundances drive the differences between cohorts. We first need to extract the model coefficients of taxa:
+Let us visualize the model coefficients for species that exhibit the largest differences between the groups. This gives some insights into how the groups tend to differ from each other in terms of community composition.
+
 
 ```r
 coef <- coefficients(permanova)["Time1",]
@@ -552,7 +559,8 @@ barplot(sort(top.coef), horiz = T, las = 1, main = "Top taxa")
 
 
 
-Exercises
+**Exercises** 
+
 Community-level comparisons: Use PERMANOVA to investigate whether the community composition differs between two groups of individuals (e.g. times, or some other grouping of your choice). You can also include covariates such as time and type, and see how this affects the results.
 
 
