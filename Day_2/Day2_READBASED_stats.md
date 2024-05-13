@@ -16,7 +16,7 @@ Now let’s start the fun!
 
 In R studio.
 
-### Load libraries
+Load libraries:
 
 ```r
 library(microbiome)
@@ -27,17 +27,19 @@ library(tibble)
 library(tidyverse)
 library(vegan)
 library(compositions)
-
+library(pheatmap)
+library(ggplot2)
 library(mia)
+
+
 library(tidyverse)
 library(ggplot2)
 library(knitr)
-library(phyloseq)
 library(gcookbook)
 ```
 
 
-##### 1. load the data
+## 1. load the data
 
 First we need to load our data. Usually the biggest bottleneck between raw data and analyses is to get the data in the right shape for your purpose. Often this requires a little bit of data mingling. On this road - google is your best friend to master the R universe :)
 
@@ -68,7 +70,7 @@ merged_metagenomes
 
 We need to add the metadata to the phyloseq object. 
 
-#### 2. format the data
+## 2. format the data
 
 ```r
 meta <- meta  %>%  arrange(row_number(SRA.identifier)) # sort the data frame
@@ -81,7 +83,7 @@ colnames(merged_metagenomes@tax_table@.Data)<- c("Kingdom", "Phylum", "Class", "
 ```
 
 
-#### 3. Basic stats
+## 3. Basic stats
 
 Before we start anything, let’s just check out or data a little bit (sanity check). Never go blind into your analyses.
  
@@ -147,7 +149,7 @@ Etraction of the sample's names.
 sample_names(merged_metagenomes)
 ```
 
-#### Aggregation
+### Aggregation
 
 Microbial species can be called at multiple taxonomic resolutions. We can easily agglomerate the data based on taxonomic ranks. Here, we agglomerate the data at Family level.
 
@@ -179,12 +181,12 @@ knitr::kable(head(tax_table(merged_metagenomes_family))) %>%
 
 
 
-### 4. QC and Pre-process data
+## 4. QC and Pre-process data
 
 Now that we know a little bit about our data we can start the pre-processing. 
 
 
-####  Library size / read count
+###  Library size / read count
 
 Let us check for distribution of number of sequences retained from the Kraken/Bracken approach.
 
@@ -215,7 +217,7 @@ ggplot(df) +
 ![density](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/reads_count.png)
 
 
-#### Prevalence - Detection 
+### Prevalence - Detection 
 
 
 Prevalence quantifies the frequency of samples where certain microbes were detected (above a given detection threshold). The prevalence can be given as sample size (N) or percentage (unit interval).
@@ -256,7 +258,7 @@ HINT
 </details> 
 
 
-##### Contaminant sequences
+#### Contaminant sequences
 Samples might be contaminated with exogenous sequences. We have observed 1 contaminants Homo sapiens.
 
 
@@ -280,7 +282,7 @@ HINT
 
 </details> 
 
-#### Data transformation
+### Data transformation
 
 Data transformations are common in (microbial) ecology (Legendre2001) and used to improve compatibility with assumptions related to specific statistical methods, mitigate biases, enhance the comparability of samples or features, or to obtain more interpretable values.
 
@@ -317,7 +319,20 @@ microbiome::transform(merged_metagenomes, transform = "compositional")
 In order to assess the effect of the different transformations, you can use the *clr* or the *log10* for the  downstream analysis. 
 
 
-### 5. Microbiome composition
+### Confounding effects
+Confounders can be defined as variables that are related to and affect the apparent dynamics between the response and the main independent variable. They are common in experimental studies. Generally, they can be classified into 3 groups:
+
+- Biological confounders, such as age and sex
+
+- Technical confounders produced during sample collection, processing and analysis
+
+- Confounders resulting from experimental models, such as batch effects and sample history
+
+Controlling for confounders is an important practice to reach an unbiased conclusion. To perform causal inference, it is crucial that the method is able to include confounders in the model. This is not possible with statistical tests of general use, such as the Wilcoxon test. In contrast, methods that target Differential Abundance Analysis (DAA), such as those described in this chapter, allow controlling for confounders. In the following examples, we will perform DAA with a main independent variable and a few confounders.
+
+
+
+## 5. Microbiome composition
 
 Microbial abundances are typically ‘compositional’ (relative) in the current microbiome profiling data sets. This is due to technical aspects of the data generation process (see e.g. Gloor et al., 2017).
 
