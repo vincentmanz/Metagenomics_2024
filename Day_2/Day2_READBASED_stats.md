@@ -515,11 +515,11 @@ div.df <- merge(hmp.div,hmp.meta, by = "Sample")
 colnames(div.df)
 
 
-div.df2 <- div.df[, c("sam_name", "diversity_inverse_simpson", "diversity_gini_simpson", "diversity_shannon", "diversity_fisher")]
+div.df2 <- div.df[, c("sam_name", "diversity_inverse_simpson", "diversity_gini_simpson", "diversity_shannon", "diversity_fisher", "chao1")]
 
 # the names are not pretty. we can replace them
 
-colnames(div.df2) <- c("Type", "Inverse Simpson", "Gini-Simpson", "Shannon", "Fisher")
+colnames(div.df2) <- c("Type", "Inverse Simpson", "Gini-Simpson", "Shannon", "Fisher", "Chao1")
 
 # check
 colnames(div.df2)
@@ -544,6 +544,10 @@ p <- p + rremove("x.text")
 p
 ```
 ![indices](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/indices.png)
+
+Each of these metrics can give an insight into the distribution of the OTUs inside our samples. For example, the Chao1 diversity index gives more weight to singletons and doubletons observed in our samples, while Shannon is an entropy index remarking the impossibility of taking two reads out of the metagenome “bag” and that these two will belong to the same OTU.
+
+**Q: What do you observe?**
 
 
 ### Investigate the top factors
@@ -682,3 +686,4 @@ ggplot(nmds_spec_gg, aes(x=MDS1,y=MDS2)) +
 
 
 
+# https://microbiome.github.io/OMA/docs/devel/pages/30_differential_abundance.html
