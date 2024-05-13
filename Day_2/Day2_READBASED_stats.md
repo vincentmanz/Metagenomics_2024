@@ -419,7 +419,7 @@ print(p)
 
 ![barplot](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/barplot_genus.png)
 
-# Diversity
+## 6 Diversity
 
 
 Species diversity, in its simplest definition, is the number of species in a particular area and their relative abundance (evenness). Once we know the taxonomic composition of our metagenomes, we can do diversity analyses. Here we will discuss the two most used diversity metrics, α diversity (within one metagenome) and β (across metagenomes).
@@ -460,20 +460,29 @@ HINT
 </details>  
 
 
-## Alpha diversity
+### Alpha diversity
+
+
+A comprehensive list of global indicators of the ecosystem state can be obtained as follows. This includes various measures of richness, evenness, diversity, dominance, and rarity with default parameters. See the individual functions for more options regarding parameter tuning.
 
 ```r
 pseq <- aggregate_rare(merged_metagenomes, level = "Species", detection = 0.1/100, prevalence = 50/100)
 
 tab <-microbiome::alpha(pseq, index = "all")
-kable(head(tab))
+head(tab)
 ```
+This returns observed richness with given detection threshold(s).
+
+
 ```r
-tab <- richness(pseq)
-kable(head(tab))
+tab <- richness(pseq, detection=30000)
+head(tab)
 ```
 
 ```r
+
+
+
 p.shannon <- boxplot_alpha(pseq, 
                            index = "shannon",
                            x_var = "Type",
@@ -512,7 +521,8 @@ permanova <- adonis(t(otu) ~ Time,
                     data = meta, permutations=9999, method = "euclidean")
 ```
 
-# P-value
+P-value: 
+
 ```r
 print(as.data.frame(permanova$aov.tab))
 ```
@@ -543,266 +553,12 @@ barplot(sort(top.coef), horiz = T, las = 1, main = "Top taxa")
 
 
 Exercises
-Community-level comparisons: Use PERMANOVA to investigate whether the community composition differs between two groups of individuals (e.g. times, or some other grouping of your choice). You can also include covariates such as age and gender, and see how this affects the results.
+Community-level comparisons: Use PERMANOVA to investigate whether the community composition differs between two groups of individuals (e.g. times, or some other grouping of your choice). You can also include covariates such as time and type, and see how this affects the results.
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-**Q Can you come up with the command for family (S) and phylum (P) level?**
-
-**Tip**: make sure you save it to a different variable. Otherwise you are overwriting your species data.
-
-<details>
-<summary>
-HINT
-</summary>
-
-> If not done, run bracken on diffrent levels, load the merged file into rstudio. 
-
-</details>  
-
-
-
-
-#### 4. Plot relative abundances
-Let’s plot and explore microbial composition and relative abundances in our samples by visualizing them.
-
-As a first overview of coarse differences we can create a stacked bar plot of phyla. We need to mingle our data structure a bit to make it compliant with ggplot and add the metadata to get an extra level of information.
-
-```r
-
-# data mingling
-species_level <- species_frac_filtered %>% gather(key="SRA.identifier",value="rel_abun",-name)
-# now join with metadata by column 'Sample'. We are using left join in case the metadata file contains additional samples not included in our dataset
-species_level <- left_join(species_level,meta,by="SRA.identifier") 
-# check how it looks
-head(species_level) 
-genus_level <- genus_frac_filtered %>% gather(key="SRA.identifier",value="rel_abun",-name)
-# now join with metadata by column 'Sample'. We are using left join in case the metadata file contains additional samples not included in our dataset
-genus_level <- left_join(genus_level,meta,by="SRA.identifier") 
-# check how it looks
-head(genus_level) 
-family_level <- family_frac_filtered %>% gather(key="SRA.identifier",value="rel_abun",-name)
-# now join with metadata by column 'Sample'. We are using left join in case the metadata file contains additional samples not included in our dataset
-family_level <- left_join(family_level,meta,by="SRA.identifier") 
-# check how it looks
-head(family_level) 
-phylum_level <- phylum_frac_filtered %>% gather(key="SRA.identifier",value="rel_abun",-name)
-# now join with metadata by column 'Sample'. We are using left join in case the metadata file contains additional samples not included in our dataset
-phylum_level <- left_join(phylum_level,meta,by="SRA.identifier") 
-# check how it looks
-head(phylum_level) 
-
-
-```
-
-
-```r
-ggplot(phylum_level, aes(x=Sample, y=rel_abun)) +
-  geom_bar(stat="identity", position="stack", aes(fill=name)) + # chose bar plot
-  theme(axis.text.x = element_text(angle=45, hjust=1)) + # put x-axis label at 45 degree angle
-  facet_grid(. ~ Time, scales="free_x",space = "free_x") # produce two panels according to metatadata category 'Time' 
-  
-```
-
-![barplot](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/barplot_phylum.png)
-
-**Q: Do the phyla profiles look similar between samples? Can you spot any trends?**
-
-<details>
-<summary>
-HINT
-</summary>
-
-> A: We see that the same two Phyla dominate all samples but there is some variability between samples. From a first look there does not seem to be a major difference between the two groups A and B at this taxonomic level.
-
-</details>  
-
-
-*If you have time you can also visualize the other taxonomic levels (e.g. species) with the same approach. Try to come up with the code yourself. Hint: Omit legend using legend.position (guides(fill = FALSE)).*
-
-
-<details>
-<summary>
-HINT
-</summary>
-
-```r
-ggplot(genus_level, aes(x=Sample, y=rel_abun)) +
-  geom_bar(stat="identity", position="stack", aes(fill=name)) + # chose bar plot
-  theme(axis.text.x = element_text(angle=45, hjust=1)) + # put x-axis label at 45 degree angle
-  facet_grid(. ~ Time, scales="free_x",space = "free_x") +# produce two panels according to metatadata category 'Time' 
-  guides(fill = FALSE)
-ggplot(family_level, aes(x=Sample, y=rel_abun)) +
-  geom_bar(stat="identity", position="stack", aes(fill=name)) + # chose bar plot
-  theme(axis.text.x = element_text(angle=45, hjust=1)) + # put x-axis label at 45 degree angle
-  facet_grid(. ~ Time, scales="free_x",space = "free_x") + # produce two panels according to metatadata category 'Time' 
-  guides(fill = FALSE)
-```
-
-</details>  
-
-![barplot](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/barplot_family.png)
-
-
-**Q: Does the profile change according to taxonomic level? Is the stacked bar plot helpful in all scenarios?**
-
-
-<details>
-<summary>
-HINT
-</summary>
-
-> A: When too many taxa are present, such as at species level, it becomes difficult to distinguish the colors. As you might realize, when there are too many taxa it becomes very difficult to spot anything in the stacked bar plot. 
-
-</details>  
-
-
-Another way to visualize the relative abundances is by creating a bubble plot. Let’s do that for the family composition.
-
-
-```r
-# bubble plot
-ggplot(phylum_level, aes(x=Sample, y=name)) +
-  geom_point(aes(size=rel_abun, color=Type), alpha=0.7) + # this time we use points
-  theme(axis.text.x = element_text(angle=45, hjust=1)) +
-  scale_size_continuous(limits = c(0.00001,max(phylum_level$rel_abun))) + # sets minimum above '0'
-  facet_grid(. ~ Time, scales="free_x",space = "free_x")
-
-```
-![bubble](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/bubble_plot.png)
-
-
-**Q: Did you notice that here we added an extra level of information? Can you spot what it is?**
-
-<details>
-<summary>
-HINT
-</summary>
-
-> A: Now we produced panels according to Time and colored according to Type. This plot allows us to combine multiple metadata layers. Can you see the change for Enterococcus? 
-
-</details>  
-
-If you have time you can play with the different information levels and see what this can tell you about your data.
-
-When we want to look at species composition, the communities are often very complex and looking at abundance profiles is not as informative. One way to explore species-level community composition is to filter you data so you focus only on the most abundant taxa across samples. What cutoff and approach you use here of course depends on your question and data.
-
-Let’s create a heatmap of the 20 most abundant spexies in our samples.
-
-
-```r
-# sort species by abundance across samples and select top 20
-species_level_abundance <- species_frac %>% select(-taxonomy_id, -taxonomy_lvl) %>% head(20) %>% as_tibble() %>%  column_to_rownames( "name")
-genus_level_abundance <- genus_frac %>% select(-taxonomy_id, -taxonomy_lvl) %>% head(20) %>% as_tibble() %>%  column_to_rownames( "name")
-phylum_level_abundance <- phylum_frac %>% select(-taxonomy_id, -taxonomy_lvl) %>% head(20) %>% as_tibble() %>%  column_to_rownames( "name")
-
-
-# shape the metadata
-meta_s <- subset(meta, SRA.identifier %in% colnames(species_level_abundance)) %>%  as_tibble() %>% 
-  column_to_rownames("Sample") # shoft the 'Sample' column to rownames
-meta_h <- subset(meta, SRA.identifier %in% colnames(genus_level_abundance)) %>%  as_tibble() %>% 
-  column_to_rownames("Sample") # shoft the 'Sample' column to rownames
-meta_p <- subset(meta, SRA.identifier %in% colnames(phylum_level_abundance)) %>%  as_tibble() %>% 
-  column_to_rownames("Sample") # shoft the 'Sample' column to rownames
-
-column_name <- meta_h %>% rownames_to_column() %>%  arrange(row_number(SRA.identifier)) %>% pull(rowname)
-colnames(species_level_abundance) <- column_name
-colnames(genus_level_abundance) <- column_name
-colnames(phylum_level_abundance) <- column_name
-
-
-# plot the heatmap
-pheatmap::pheatmap(genus_level_abundance,
-                   cluster_rows = TRUE,
-                   cluster_cols = TRUE,
-                   annotation_col = meta_h[,c(2,3,4,5)],
-                   annotation_names_col=TRUE)
-
-pheatmap::pheatmap(phylum_level_abundance,
-                   cluster_rows = TRUE,
-                   cluster_cols = TRUE,
-                   annotation_col = meta_h[,c(2,3,4,5)],
-                   annotation_names_col=TRUE)
-pheatmap::pheatmap(species_level_abundance,
-                   cluster_rows = TRUE,
-                   cluster_cols = TRUE,
-                   annotation_col = meta_h[,c(2,3,4,5)],
-                   annotation_names_col=TRUE)
-```
-![bubble](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/heatmap_phy.png)
-
-
-**Q: what can you learn from the heatmap. Are there any informative clusters?**
-
-<details>
-<summary>
-HINT
-</summary>
-
-> A: We can see that 3 phylum dominate the communities in most samples. Adding the metadata we can also see that data do not cluster strongly according to group or time point, but there is some degree of structuring.
-
-</details>  
-
-
-
-
-#### 5. Beta diversity
+### Beta diversity
 
 
 Often we want to know whether the microbiomes are different between conditions or groups. One way to explore this is to look at the beta-diversity in an ordination. There are different distances and approaches that can be done and explored. We will perform an NMDS on bray curtis dissimilarities of the species profiles.
