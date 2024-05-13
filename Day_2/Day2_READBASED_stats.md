@@ -495,7 +495,7 @@ abundances(pseq)
 p <- plot_landscape(pseq, method = "NMDS", distance = "bray", col = "Time", size = 3)
 print(p)
 ```
-![association](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/pcq.png)
+![association](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/pca.png)
 
 
 ### Estimating associations with an external variable
