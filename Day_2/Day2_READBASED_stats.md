@@ -90,7 +90,7 @@ Before we start anything, let’s just check out or data a little bit (sanity ch
 
 
 
-Summurize the data.  
+Summarize the data.  
 ```r
 summarize_phyloseq(merged_metagenomes)
 
@@ -158,7 +158,6 @@ Microbial species can be called at multiple taxonomic resolutions. We can easily
 merged_metagenomes_family <- aggregate_rare(merged_metagenomes, level = "Family", detection = 0/100, prevalence = 0/100) # no filter except family
 # Show dimensionality
 dim(abundances(merged_metagenomes_family))
-
 ```
 
 **Q: How many sample and tax do we have now?**
@@ -271,6 +270,7 @@ merged_metagenomes = prune_taxa(allTaxa, merged_metagenomes)
 ```
 
 Now recheck that your data are clean before continuing the analysis. 
+
 **Q: Which taxa is present in all samples and with a high abundance?**
 
 <details>
@@ -284,7 +284,7 @@ HINT
 
 ### Data transformation
 
-Data transformations are common in (microbial) ecology (Legendre2001) and used to improve compatibility with assumptions related to specific statistical methods, mitigate biases, enhance the comparability of samples or features, or to obtain more interpretable values.
+Data transformations are common in (microbial) ecology (Legendre 2001) and used to improve compatibility with assumptions related to specific statistical methods, mitigate biases, enhance the comparability of samples or features, or to obtain more interpretable values.
 
 Examples include the logarithmic transformation, calculation of relative abundances (percentages), and compositionality-aware transformations such as the centered log-ratio transformation (clr).
 
@@ -405,6 +405,7 @@ p <- plot_composition(pseq,
                       taxonomic.level = "Genus",
                       sample.sort = "Sample",
                       x.label = "Sample",
+                      otu.sort = "abundance",
                       group_by = "Type") +
   scale_fill_brewer("Genus", palette = "Paired") +
   guides(fill = guide_legend(ncol = 1)) +
@@ -619,7 +620,7 @@ barplot(sort(top.coef), horiz = T, las = 1, main = "Top taxa")
 
 **Exercises** 
 
-Community-level comparisons: Use PERMANOVA to investigate whether the community composition differs between two groups of individuals (e.g. times, or some other grouping of your choice). You can also include covariates such as time and type, and see how this affects the results.
+Community-level comparisons: Use PERMANOVA to investigate whether the community composition differs between two groups of individuals (e.g. times, or some other grouping of your choice). You can also include covariates such as type, and see how this affects the results?
 
 
 
@@ -681,11 +682,3 @@ ggplot(nmds_spec_gg, aes(x=MDS1,y=MDS2)) +
   ggtitle("NMDS colored according to Type")
 ```
 ![nmds_type](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_type.png)
-
-
-
-
-
-#https://microbiome.github.io/OMA/docs/devel/pages/30_differential_abundance.html
-#https://microbiome.github.io/OMA/docs/devel/pages/60_network_learning.html
-
