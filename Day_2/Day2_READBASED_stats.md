@@ -2,8 +2,7 @@
 
 | Time      | Activity                      | Slides                                | Hands-on                                                |
 |-----------|-------------------------------|---------------------------------------|---------------------------------------------------------|
-| Morning   | Read Base analysis            |                                       |       [Link here](Readbased.md)                            | 
-| Afternoon | Assembly                      | [Link here](linkhere.pdf)                | [Link here](Day2/Day2_assembly.md) |
+| Morning   | Read Base analysis            |                                       |       [Link here](Readbased.md)                         | 
 
 
 
@@ -63,41 +62,54 @@ Any data already in an R session can be annoated/coerced to be recognized by phy
 merged_metagenomes
 ```
 
+Summarize the data.  
+
+```r
+# Summarize the phyloseq object 'merged_metagenomes'
+summarize_phyloseq(merged_metagenomes)
+
+# Display the first few rows of the OTU (Operational Taxonomic Unit) table
+head(otu_table(merged_metagenomes))
+
+# Display the first few rows of the taxonomy table
+head(tax_table(merged_metagenomes))
+
+# Display the first few rows of the sample data associated with 'merged_metagenomes'
+head(sample_data(merged_metagenomes))
+
+# Get the sample variables of the phyloseq object 'merged_metagenomes'
+sample_variables(merged_metagenomes)
+```
+
+
+
 We need to add the metadata to the phyloseq object. 
 
 ## 2. format the data
 
 ```r
-meta <- meta  %>%  arrange(row_number(SRA.identifier)) # sort the data frame
-merged_metagenomes@sam_data <- sample_data(meta) # associate the metadata to the to the phyloseq object
-column_name <-  meta %>% pull(Sample) # extract the sample names
-sample_names(merged_metagenomes) <- column_name # associate the sample names to the phyloseq object
+# Sort the 'meta' data frame by the 'SRA.identifier' column
+meta <- meta %>% arrange(row_number(SRA.identifier))
 
-merged_metagenomes@tax_table@.Data <- substring(merged_metagenomes@tax_table@.Data, 4) # remove the unnecessary 'k_' in the taxonomy.
-colnames(merged_metagenomes@tax_table@.Data)<- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species") # change the rank name 
+# Associate the sorted metadata to the phyloseq object as sample data
+merged_metagenomes@sam_data <- sample_data(meta)
+
+# Extract the sample names from the 'meta' data frame
+column_name <- meta %>% pull(Sample)
+
+# Associate the extracted sample names to the phyloseq object
+sample_names(merged_metagenomes) <- column_name
+
+# Remove the unnecessary 'k_' prefix in the taxonomy data
+merged_metagenomes@tax_table@.Data <- substring(merged_metagenomes@tax_table@.Data, 4)
+
+# Rename the columns of the taxonomy table to represent taxonomic ranks
+colnames(merged_metagenomes@tax_table@.Data) <- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
 ```
-
 
 ## 3. Basic stats
 
 Before we start anything, let’s just check out or data a little bit (sanity check). Never go blind into your analyses.
- 
-
-
-
-Summarize the data.  
-```r
-summarize_phyloseq(merged_metagenomes)
-
-head(otu_table(merged_metagenomes))
-head(tax_table(merged_metagenomes))
-head(sample_data(merged_metagenomes))
-
-sample_variables(merged_metagenomes)
-
-
-```
-
 
 ```r
 head(psmelt(merged_metagenomes))
@@ -149,9 +161,10 @@ sample_names(merged_metagenomes)
 Microbial species can be called at multiple taxonomic resolutions. We can easily agglomerate the data based on taxonomic ranks. Here, we agglomerate the data at Family level.
 
 ```r
+# Aggregate rare taxa at the family level for the phyloseq object 'merged_metagenomes'
+merged_metagenomes_family <- aggregate_rare(merged_metagenomes, level = "Family", detection = 0/100, prevalence = 0/100)
 
-merged_metagenomes_family <- aggregate_rare(merged_metagenomes, level = "Family", detection = 0/100, prevalence = 0/100) # no filter except family
-# Show dimensionality
+# Display the dimensionality of the abundances of 'merged_metagenomes_family'
 dim(abundances(merged_metagenomes_family))
 ```
 
@@ -165,14 +178,10 @@ HINT
 > Now there are 53 taxa and 30 samples, meaning that there are 53 different Phylum level taxonomic groups. Looking at the rowData after agglomeration shows all Enterococcaceae are combined together, and all lower rank information is lost.
 
 ```r
-knitr::kable(head(tax_table(merged_metagenomes_family))) %>% 
-  kableExtra::kable_styling("striped", 
-                            latex_options="scale_down") %>% 
-  kableExtra::scroll_box(width = "100%")
+head(tax_table(merged_metagenomes_family))
 ```
 
 </details> 
-
 
 
 ## 4. QC and Pre-process data
@@ -257,11 +266,17 @@ Samples might be contaminated with exogenous sequences. We have observed 1 conta
 
 
 ```r
-# remove contaminants
+# Define contaminants to be removed (e.g., human DNA with taxonomic ID '9606')
 contaminants <- c("9606") 
-allTaxa = taxa_names(merged_metagenomes)
+
+# Get the names of all taxa in the phyloseq object 'merged_metagenomes'
+allTaxa <- taxa_names(merged_metagenomes)
+
+# Exclude contaminants from the list of all taxa
 allTaxa <- allTaxa[!(allTaxa %in% contaminants)]
-merged_metagenomes = prune_taxa(allTaxa, merged_metagenomes)
+
+# Remove taxa associated with contaminants from 'merged_metagenomes'
+merged_metagenomes <- prune_taxa(allTaxa, merged_metagenomes)
 ```
 
 Now recheck that your data are clean before continuing the analysis. 
@@ -277,7 +292,7 @@ HINT
 
 </details> 
 
-### Data transformation
+### Data Normalization
 
 Data transformations are common in (microbial) ecology (Legendre 2001) and used to improve compatibility with assumptions related to specific statistical methods, mitigate biases, enhance the comparability of samples or features, or to obtain more interpretable values.
 
@@ -312,20 +327,6 @@ microbiome::transform(merged_metagenomes, transform = "compositional")
 ```
 
 In order to assess the effect of the different transformations, you can use the *clr* or the *log10* for the  downstream analysis. 
-
-
-### Confounding effects
-Confounders can be defined as variables that are related to and affect the apparent dynamics between the response and the main independent variable. They are common in experimental studies. Generally, they can be classified into 3 groups:
-
-- Biological confounders, such as age and sex
-
-- Technical confounders produced during sample collection, processing and analysis
-
-- Confounders resulting from experimental models, such as batch effects and sample history
-
-Controlling for confounders is an important practice to reach an unbiased conclusion. To perform causal inference, it is crucial that the method is able to include confounders in the model. This is not possible with statistical tests of general use, such as the Wilcoxon test. In contrast, methods that target Differential Abundance Analysis (DAA), such as those described in this chapter, allow controlling for confounders. In the following examples, we will perform DAA with a main independent variable and a few confounders.
-
-
 
 ## 5. Microbiome composition
 
@@ -676,3 +677,24 @@ ggplot(nmds_spec_gg, aes(x=MDS1,y=MDS2)) +
   ggtitle("NMDS colored according to Type")
 ```
 ![nmds_type](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_type.png)
+
+
+
+
+
+
+
+
+
+
+### Confounding effects
+Confounders can be defined as variables that are related to and affect the apparent dynamics between the response and the main independent variable. They are common in experimental studies. Generally, they can be classified into 3 groups:
+
+- Biological confounders, such as age and sex
+
+- Technical confounders produced during sample collection, processing and analysis
+
+- Confounders resulting from experimental models, such as batch effects and sample history
+
+Controlling for confounders is an important practice to reach an unbiased conclusion. To perform causal inference, it is crucial that the method is able to include confounders in the model. This is not possible with statistical tests of general use, such as the Wilcoxon test. In contrast, methods that target Differential Abundance Analysis (DAA), such as those described in this chapter, allow controlling for confounders. In the following examples, we will perform DAA with a main independent variable and a few confounders.
+

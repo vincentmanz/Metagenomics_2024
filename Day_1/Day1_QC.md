@@ -230,7 +230,7 @@ Even with host depletion at the library prep stage, it is important to remove le
 A [publication](https://doi.org/10.1099/mgen.0.000393) has done a very thorough study using different software/approaches to detect/remove human reads in microbial datasets. If we are to pick one method, Bowtie2 performs the best overall to remove human reads from the microbial datasets. So, we have chosen to use bowtie2 to remove the host DNA from our dataset.
 
 
-
+F-measure is the measure of predictive performance.
 
 ![host1](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_1/pictures/rmhost.gif)
 

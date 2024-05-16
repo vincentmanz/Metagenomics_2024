@@ -60,16 +60,13 @@ for i in {518..547}
 do
     sed -i '/Viruses/,$d'  READBASED/SRR15276"$i".kraken_report.out  # remove viruses / bug in the DB formatting
     bracken -d READBASED/k2_standard_20240112/ -t 1000 -i READBASED/SRR15276"$i".kraken_report.out -o READBASED/BRACKEN/SRR15276"$i"_species.bracken -l S
-    bracken -d READBASED/k2_standard_20240112/ -t 1000 -i READBASED/SRR15276"$i".kraken_report.out -o READBASED/BRACKEN/SRR15276"$i"_genus.bracken -l G
-    bracken -d READBASED/k2_standard_20240112/ -t 1000 -i READBASED/SRR15276"$i".kraken_report.out -o READBASED/BRACKEN/SRR15276"$i"_family.bracken -l F
-    bracken -d READBASED/k2_standard_20240112/ -t 1000 -i READBASED/SRR15276"$i".kraken_report.out -o READBASED/BRACKEN/SRR15276"$i"_phylum.bracken -l P
 done
 ```
 
-This step runs very fast, a few seconds. It generates two files for each sample in its corresponding subdirectory inside 03-Kraken: samplename_report_species.txt and samplename.kraken_report_bracken.out. Please take a look at both files to understand what they contain.
+This step runs very fast, a few seconds. It generates two files for each sample in its corresponding subdirectory inside BRACKEN: samplename_report_species.txt and samplename.kraken_report_bracken.out. Please take a look at both files to understand what they contain.
 
 Finally, we are converting the backen report into biom file for the downstrem analysis. 
 
 ```bash
-kraken-biom READBASED/BRACKEN/SRR152765*_species_filtered.bracken -o READBASED/merge_species.biom --fmt json -v
+kraken-biom READBASED/BRACKEN/SRR152765*_species.bracken -o READBASED/merge_species.biom --fmt json -v
 ```
