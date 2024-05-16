@@ -19,9 +19,9 @@ Eberhard, F.E., Klimpel, S., Guarneri, A.A. et al. Exposure to Trypanosoma paras
 
 
 
-![communities](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_1/communities.png)
+![communities](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_1/pictures/communities.png)
 
-![pangenomes](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_1/pangenomes.png)
+![pangenomes](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_1/pictures/pangenomes.png)
 
 
 The following link contains FTP URLs for each raw data file for 30 samples:
@@ -230,7 +230,9 @@ A [publication](https://doi.org/10.1099/mgen.0.000393) has done a very thorough 
 
 
 ![host1](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_1/pictures/rmhost1.gif)
+
 ![host2](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_1/pictures/rmhost2.gif)
+
 ![host3](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_1/pictures/rmhost3.gif)
 
 
