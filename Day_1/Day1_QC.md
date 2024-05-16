@@ -232,13 +232,13 @@ A [publication](https://doi.org/10.1099/mgen.0.000393) has done a very thorough 
 
 
 
-![host1](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_1/pictures/rmhost1.gif)
+![host1](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_1/pictures/rmhost.gif)
 
 ![host2](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_1/pictures/rmhost2.gif)
 
 ![host3](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_1/pictures/rmhost3.gif)
 
-
+F-measure is a measure of predictive performance
 Based on the findings from the above paper, we are going to use Bowtie2 to remove host DNA. The basic idea is to map/align the preprocessed reads to the bovine reference genome. Then we extract the reads that do not align for downstream analysis.
 
 
