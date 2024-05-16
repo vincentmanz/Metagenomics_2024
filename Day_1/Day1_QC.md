@@ -1,5 +1,5 @@
 
-# Downloading the TRYPANO metagenomes
+# Data and QC
 
 We are going to use the data from the following article: 
 
@@ -217,6 +217,8 @@ mamba deactivate
 
 Look how well the trimming went.
 
+![multiqc1](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_1/pictures/fastqc_sequence_counts_plot.png
+![multiqc2](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_1/pictures/fastqc_per_base_sequence_quality_plot.png
 
 # Removing host reads
 
