@@ -1,7 +1,7 @@
-# Mofa - on Trypanomsoma data
+# Mofa - on Trypanosoma data
 
 
-Separate the dat in 3 groups, control, *T. cruzi* and *T. rangeli*.
+Separate the data in 3 groups, control, *T. cruzi* and *T. rangeli*.
 Load the data. 
 ```{r}
 library(microbiome)
@@ -56,7 +56,7 @@ merged_metagenomes = prune_taxa(allTaxa, merged_metagenomes)
 
 
 
-# Fromating the data
+# Formating the data
 
 We concider that we have 3 differents experiments, Control, T. cruzi and T. rangeli. We will need to separate these experiments into 3 blocks of data. 
 
@@ -108,10 +108,10 @@ ggdensity(rbind(block_control_aggre_df, block_cruzi_aggre_df,block_rangeli_aggre
 ```
 
 CLR nomalization
-![prevalence](Day_3/img/density_clr.png)
+![prevalence](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_3/img/density_clr.png)
 
 Z nomalization
-![prevalence](Day_3/img/density_Z.png)
+![prevalence](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_3/img/density_Z.png)
 
 
 Back to the data transformation.
@@ -163,7 +163,7 @@ Visualise data structure, sanity check.
 # Plot an overview of the data in the MOFA object
 plot_data_overview(mofa)
 ```
-![data_overview_mofa)](Day_3/img/data_overview_mofa.png)
+![data_overview_mofa)](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_3/img/data_overview_mofa.png)
 
 
 In that case we do not have missing data, if it was the case, you will have grey line on the graph. It helps to see if the data are correctly aligned. 
@@ -194,7 +194,7 @@ Mofa will complain about the sample size. We have only 5 samples, we should have
 plot_variance_explained(mofa, plot_total = T)[[2]]
 ```
 
-![variance_explained1)](Day_3/img/variance_explained1.png)
+![variance_explained1)](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_3/img/variance_explained1.png)
 
 Tha variance is well represented accross the data blocks. 
 
@@ -202,7 +202,7 @@ Tha variance is well represented accross the data blocks.
 plot_variance_explained(mofa, max_r2=5)
 ```
 
-![variance_explained2)](Day_3/img/variance_explained2.png)
+![variance_explained2)](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_3/img/variance_explained2.png)
 
 We have only 2 factors but they capture coordinated variability across all data blocks. 
 
@@ -227,7 +227,7 @@ plot_factors(mofa,
 ) + scale_fill_manual(values=time.colors)
 ```
 
-![factors)](Day_3/img/factors.png)
+![factors)](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_3/img/factors.png)
 
 
 We can see that Factor 1 is well explaining the variation through time. 
@@ -271,7 +271,7 @@ combined_plot <- plot_grid(plot_control, plot_cruzi, plot_rangeli, ncol = 3)
 print(combined_plot)
 ```
 
-![Weights)](Day_3/img/Weights.png)
+![Weights)](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_3/img/Weights.png)
 
 
 ## Plot feature values
@@ -289,6 +289,6 @@ plot_rangeli <- plot_data_heatmap(mofa, factor = 1, view = "T.rangeli", features
 grid.arrange(plot_control[[4]], plot_cruzi[[4]], plot_rangeli[[4]], ncol = 1)
 ```
 
-![heatmap)](Day_3/img/heatmap.png)
+![heatmap)](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_3/img/heatmap.png)
 ```
 
