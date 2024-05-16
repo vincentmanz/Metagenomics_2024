@@ -30,12 +30,7 @@ library(compositions)
 library(pheatmap)
 library(ggplot2)
 library(mia)
-
-
 library(tidyverse)
-library(ggplot2)
-library(knitr)
-library(gcookbook)
 ```
 
 

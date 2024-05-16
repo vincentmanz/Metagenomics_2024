@@ -21,13 +21,10 @@ The course will be held in Pontificia Universidad Católica del Ecuador, The cou
 ### Day 2
 
 * Read based data analysis in R
-* Assembly
 
 ### Day 3
 
-* Assembly evaluation
-* Introduction to binning
-* Genome-resolved metagenomics
+* Integrative genomics
 
 ## Target group
 This course is targeted at MSc, PhD, PosDoc and researcher who are interested in using metagenomics for investigating microbial communities.

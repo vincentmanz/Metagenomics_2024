@@ -20,6 +20,7 @@ Eberhard, F.E., Klimpel, S., Guarneri, A.A. et al. Exposure to Trypanosoma paras
 
 
 ![communities](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_1/communities.png)
+
 ![pangenomes](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_1/pangenomes.png)
 
 
