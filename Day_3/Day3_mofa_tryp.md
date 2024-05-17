@@ -58,7 +58,7 @@ merged_metagenomes = prune_taxa(allTaxa, merged_metagenomes)
 
 # Formating the data
 
-We concider that we have 3 differents experiments, Control, T. cruzi and T. rangeli. We will need to separate these experiments into 3 blocks of data. 
+We concider that we have 3 differents block of data, viruses, fungi and bacteria. We need to separate the data.  
 
 
 ```r
@@ -66,7 +66,7 @@ We concider that we have 3 differents experiments, Control, T. cruzi and T. rang
 AM_metagenomes <- phyloseq::subset_samples(merged_metagenomes, Morning.Afternoon == "AM")
 
 # Further subset the morning metagenomes by sample type
-block_control <- phyloseq::subset_samples(AM_metagenomes, Type == "Control")
+block_control <- phyloseq::subset_taxa(phy_1w, Phylum == "")
 block_cruzi <- phyloseq::subset_samples(AM_metagenomes, Type == "T._cruzi")
 block_rangeli <- phyloseq::subset_samples(AM_metagenomes, Type == "T._rangeli")
 

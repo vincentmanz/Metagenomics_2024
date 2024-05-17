@@ -30,6 +30,7 @@ library(pheatmap)
 library(ggplot2)
 library(mia)
 library(tidyverse)
+library(RColorBrewer)
 ```
 
 
@@ -175,7 +176,7 @@ dim(abundances(merged_metagenomes_family))
 HINT
 </summary>
 
-> Now there are 53 taxa and 30 samples, meaning that there are 53 different Phylum level taxonomic groups. Looking at the rowData after agglomeration shows all Enterococcaceae are combined together, and all lower rank information is lost.
+> There are 53 taxa and 28 samples, meaning that there are 29 different Phylum level taxonomic groups. Looking at the rowData after agglomeration shows all Enterococcaceae are combined together, and all lower rank information is lost.
 
 ```r
 head(tax_table(merged_metagenomes_family))
@@ -234,15 +235,19 @@ prevalence(merged_metagenomes, detection=1/100, sort=TRUE, count=FALSE)
 The function arguments detection and count can also be used to access, how many samples do pass a threshold for raw counts. Here, the population prevalence (frequency) at the absolute abundance threshold (count=true) at read count 1 (detection = 1) is accessed.
 
 ```r
-prevalence(merged_metagenomes, detection=1, sort=TRUE, count=true)
+# Calculate the prevalence of taxa in the phyloseq object 'merged_metagenomes'
+# Detection threshold is set to 1, taxa are sorted by prevalence, and count of taxa is returned
+prevalence(merged_metagenomes, detection = 1, sort = TRUE, count = TRUE)
 
-plot_taxa_prevalence(merged_metagenomes, level="Phylum", detection = 10000)
+# Plot the prevalence of taxa at the Phylum level with a detection threshold of 10000
+plot_taxa_prevalence(merged_metagenomes, level = "Phylum", detection = 10000)
 
-# alternative 
+# Alternative plot: Create a scatter plot of the coefficient of variation (CV) of taxa in 'merged_metagenomes'
+# The CV is a measure of relative variability, calculated as the standard deviation divided by the mean
 p1 <- plot_taxa_cv(merged_metagenomes, plot.type = "scatter")
+
+# Apply a log10 scale to the x-axis of the scatter plot
 p1 + scale_x_log10()
-
-
 ```
 
 Each point corresponds to a different or unique taxon. The y-axis represents the fraction of samples, these taxa are present. The low prevalence suggests there is a low overlap across samples. 
@@ -266,17 +271,12 @@ Samples might be contaminated with exogenous sequences. We have observed 1 conta
 
 
 ```r
-# Define contaminants to be removed (e.g., human DNA with taxonomic ID '9606')
-contaminants <- c("9606") 
+#check 
+psmelt(subset_taxa(merged_metagenomes, Genus == "Trypanosoma"))
+psmelt(subset_taxa(merged_metagenomes, Genus == "Homo"))
 
-# Get the names of all taxa in the phyloseq object 'merged_metagenomes'
-allTaxa <- taxa_names(merged_metagenomes)
-
-# Exclude contaminants from the list of all taxa
-allTaxa <- allTaxa[!(allTaxa %in% contaminants)]
-
-# Remove taxa associated with contaminants from 'merged_metagenomes'
-merged_metagenomes <- prune_taxa(allTaxa, merged_metagenomes)
+#Keep only the kingdom of interest
+merged_metagenomes <- subset_taxa(merged_metagenomes, Kingdom %in% c("Archaea", "Bacteria", "Fungi", "Viruses"))
 ```
 
 Now recheck that your data are clean before continuing the analysis. 
@@ -338,8 +338,7 @@ The next example calculates relative abundances as these are usually easier to i
 *prevalence*: Prevalence threshold (in [0, 1]) (presence accross samples).
 
 ```r
-pseq <- aggregate_rare(merged_metagenomes, level = "Family", detection = 0.1/100, prevalence = 50/100)
-
+pseq <- aggregate_rare(merged_metagenomes, level = "Family", detection = 0.05/100, prevalence = 20/100)
 pseq <- microbiome::transform(pseq, transform = "compositional")
 ```
 
@@ -361,20 +360,37 @@ HINT
 **Bar plot** are useful to have a broad look at the data. 
 
 ```r
+# Create a plot of the taxonomic composition at the Family level
 p <- plot_composition(pseq,
-                      taxonomic.level = "Family",
-                      sample.sort = "Sample",
-                      x.label = "Sample",
-                      group_by = Time) +
-  scale_fill_brewer("Family", palette = "Paired") +
+                      taxonomic.level = "Species", # Specify the taxonomic level for the plot
+                      sample.sort = "Sample",     # Sort samples by sample identifier
+                      x.label = "Sample",         # Label for the x-axis
+                      group_by = "Gut") +          # Group samples by the 'Time' variable
+
+  # Use a color palette from the Color Brewer for filling the Family groups
+  scale_fill_brewer("Species", palette = "magma-viridis") +
+
+  # Arrange the legend items in a single column
   guides(fill = guide_legend(ncol = 1)) +
+
+  # Convert the y-axis to represent relative abundance as a percentage
   scale_y_percent() +
+
+  # Add labels and a title to the plot
   labs(x = "Samples", y = "Relative abundance (%)",
        title = "Relative abundance data") + 
-  theme_ipsum(grid="Y") +
-  theme(axis.text.x = element_text(angle=90, hjust=1),
-        legend.text = element_text(face = "italic"))
-print(p)  
+
+  # Apply a clean theme with a horizontal grid
+  theme_ipsum(grid = "Y") +
+
+  # Customize the theme for x-axis text and legend text
+  theme(axis.text.x = element_text(angle = 90, hjust = 1), # Rotate x-axis text 90 degrees for readability
+        legend.text = element_text(face = "italic"),    # Italicize the legend text
+        legend.position = "none")
+
+# Print the plot
+print(p)
+ 
 ```
 
 ![barplot](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/barplot_family.png)
@@ -394,23 +410,50 @@ HINT
 *If you have time you can also visualize the other taxonomic levels (e.g. species) with the same approach. Try to come up with the code yourself.*
 
 ```r
-pseq <- aggregate_rare(merged_metagenomes, level = "Genus", detection = 0.1/100, prevalence = 50/100)
+# Aggregate rare taxa at the Genus level for the phyloseq object 'merged_metagenomes'
+# Taxa are included if they have a detection threshold of 0.05% and a prevalence of 20%
+pseq <- aggregate_rare(merged_metagenomes, level = "Phylum", detection = 0.05/100, prevalence = 20/100)
+
+# Transform the data to compositional (relative abundance) format
 pseq <- microbiome::transform(pseq, transform = "compositional")
 
+
+
+n <- dim(tax_table(pseq))[1]
+qual_col_pals = brewer.pal.info[brewer.pal.info$category == 'qual',]
+col_vector = unlist(mapply(brewer.pal, qual_col_pals$maxcolors, rownames(qual_col_pals)))
+
+
+
+# Create a plot of the taxonomic composition at the Genus level
 p <- plot_composition(pseq,
-                      taxonomic.level = "Genus",
-                      sample.sort = "Sample",
-                      x.label = "Sample",
-                      otu.sort = "abundance",
-                      group_by = "Type") +
-  scale_fill_brewer("Genus", palette = "Paired") +
+                      taxonomic.level = "Phylum", # Specify the taxonomic level for the plot
+                      sample.sort = "Sample",    # Sort samples by sample identifier
+                      x.label = "Sample",        # Label for the x-axis
+                      otu.sort = "abundance",    # Sort OTUs by their abundance
+                      group_by = "Type") +       # Group samples by the 'Type' variable
+
+  # Use a color palette from the Color Brewer for filling the Genus groups
+  scale_fill_manual(values = col_vector) +
+
+  # Arrange the legend items in a single column
   guides(fill = guide_legend(ncol = 1)) +
+
+  # Convert the y-axis to represent relative abundance as a percentage
   scale_y_percent() +
+
+  # Add labels and a title to the plot
   labs(x = "Samples", y = "Relative abundance (%)",
        title = "Relative abundance data") + 
-  theme_ipsum(grid="Y") +
-  theme(axis.text.x = element_text(angle=90, hjust=1),
-        legend.text = element_text(face = "italic"))
+
+  # Apply a clean theme with a horizontal grid
+  theme_ipsum(grid = "Y") +
+
+  # Customize the theme for x-axis text and legend text
+  theme(axis.text.x = element_text(angle = 90, hjust = 1), # Rotate x-axis text 90 degrees for readability
+        legend.text = element_text(face = "italic"))       # Italicize the legend text
+
+# Print the plot
 print(p)
 ```
 
@@ -463,23 +506,29 @@ HINT
 A comprehensive list of global indicators of the ecosystem state can be obtained as follows. This includes various measures of richness, evenness, diversity, dominance, and rarity with default parameters. See the individual functions for more options regarding parameter tuning.
 
 ```r
-pseq <- aggregate_rare(merged_metagenomes, level = "Species", detection = 0.1/100, prevalence = 50/100)
+# Aggregate rare taxa at the Species level for the phyloseq object 'merged_metagenomes'
+# Taxa are included if they have a detection threshold of 0.05% and a prevalence of 20%
+pseq <- aggregate_rare(merged_metagenomes, level = "Species", detection = 0.05/100, prevalence = 20/100)
 
-tab <-microbiome::alpha(pseq, index = "all")
+# Calculate the Shannon diversity index for the aggregated phyloseq object 'pseq'
+# The Shannon index measures the diversity within a sample, considering both richness and evenness
+tab <- microbiome::alpha(pseq, index = 'shannon')
+
+# Display the first few rows of the calculated Shannon diversity index table
 head(tab)
 ```
 This returns observed richness with given detection threshold(s).
 
-
 ```r
-tab <- richness(pseq, detection=30000)
+# Calculate the richness of the phyloseq object 'pseq' with a detection threshold of 1000
+# Richness is a measure of the number of different taxa present in a sample
+tab <- richness(pseq, detection = 1000)
+
+# Display the first few rows of the calculated richness table
 head(tab)
 ```
 
 ```r
-
-
-
 p.shannon <- boxplot_alpha(pseq, 
                            index = "shannon",
                            x_var = "Type",
@@ -492,9 +541,6 @@ p.shannon
 Alternative: 
 
 ```r
-
-pseq <- aggregate_rare(merged_metagenomes, level = "Species", detection = 0.1/100, prevalence = 50/100)
-
 # get the metadata out as seprate object
 hmp.meta <- meta(pseq)
 
@@ -510,7 +556,6 @@ div.df <- merge(hmp.div,hmp.meta, by = "Sample")
 
 # check the tables
 colnames(div.df)
-
 
 div.df2 <- div.df[, c("sam_name", "diversity_inverse_simpson", "diversity_gini_simpson", "diversity_shannon", "diversity_fisher", "chao1")]
 
@@ -595,7 +640,7 @@ Let us visualize the model coefficients for species that exhibit the largest dif
 
 ```r
 coef <- coefficients(permanova)["Time1",]
-top.coef <- coef[rev(order(abs(coef)))[1:20]]
+top.coef <- coef[rev(order(abs(as.numeric(coef))))[1:20]]
 par(mar = c(3, 14, 2, 1))
 barplot(sort(top.coef), horiz = T, las = 1, main = "Top taxa")
 ```
@@ -630,9 +675,12 @@ Often we want to know whether the microbiomes are different between conditions o
 # To ensure reproducibility we can fix the seed here. This will ensure you always get the same result each time you run your data.
 set.seed(34521)
 
+https://telatin.github.io/microbiome-bioinformatics/data/kraken-r/2021-03-33-ExploreMGprofiles_solutions.html
+species_frac_filtered <- psmelt(pseq) %>% head(20) %>% select("OTU", "Abundance", "Type", "Reads", "Time") %>%  as.data.frame()
+rownames(species_frac_filtered) <- NULL
 # Data mingling
 species_frac_filtered_f <- species_frac_filtered %>% 
-  column_to_rownames("name") %>% 
+  column_to_rownames("OTU") %>% 
   t() # transpose
 
 # Calculate distance matrix

@@ -22,10 +22,10 @@ K-mer based methods count the k-mer frequency of the reads, and compare it to a 
 #### Download the database for Kraken2 and Bracken
 In order to run Kraken2, one has to build corresponding database first, the command to build the standard Kraken2 database is kraken2-build –standard –threads 24 –db kraken.db. This will download NCBI taxonomic information, as well as the complete genomes in RefSeq for the bacterial, archaeal, and viral domains, along with the human genome and a collection of known vectors (UniVec_Core). The build process is the most time-consuming, so we are not going to perform it in this workshop. We will link to prebuild databases are [here](https://benlangmead.github.io/aws-indexes/k2).
 
-k2_standard_08gb = Standard with DB capped at 8 GB: Refeq archaea, bacteria, viral, plasmid, human1, UniVec_Core
+k2_standard_08gb = Standard with DB capped at 8 GB: Refeq archaea, bacteria, viral, plasmid, human1, UniVec_Core, protozoa & fungi.
 
 ```bash
-wget https://genome-idx.s3.amazonaws.com/kraken/k2_standard_08gb_20240112.tar.gz
+wget https://genome-idx.s3.amazonaws.com/kraken/k2_pluspfp_08gb_20240112.tar.gz
 
 ```
 
@@ -38,7 +38,7 @@ mkdir READBASED
 for i in {518..547}
 do
     echo "Mapping: SRR15276"$i""
-    kraken2 --db READBASED/k2_standard_20240112/ --threads 60  --output READBASED/SRR15276"$i".kraken.out --report READBASED/SRR15276"$i".kraken_report.out --paired TRIMMEDDATA/SRR15276"$i".R1.fastq.gz TRIMMEDDATA/SRR15276"$i".R2.fastq.gz
+    kraken2 --db READBASED/k2_pluspfp_16gb_20240112/ --threads 60  --output READBASED/SRR15276"$i".kraken.out --report READBASED/SRR15276"$i".kraken_report.out --paired TRIMMEDDATA/SRR15276"$i".R1.fastq.gz TRIMMEDDATA/SRR15276"$i".R2.fastq.gz
 done
 ```
 
@@ -58,8 +58,7 @@ mkdir READBASED/BRACKEN
 
 for i in {518..547}
 do
-    sed -i '/Viruses/,$d'  READBASED/SRR15276"$i".kraken_report.out  # remove viruses / bug in the DB formatting
-    bracken -d READBASED/k2_standard_20240112/ -t 1000 -i READBASED/SRR15276"$i".kraken_report.out -o READBASED/BRACKEN/SRR15276"$i"_species.bracken -l S
+    bracken -d READBASED/k2_pluspfp_16gb_20240112/ -t 10 -i READBASED/SRR15276"$i".kraken_report.out -o READBASED/BRACKEN/SRR15276"$i"_species.bracken 
 done
 ```
 
@@ -68,5 +67,5 @@ This step runs very fast, a few seconds. It generates two files for each sample 
 Finally, we are converting the backen report into biom file for the downstrem analysis. 
 
 ```bash
-kraken-biom READBASED/BRACKEN/SRR152765*_species.bracken -o READBASED/merge_species.biom --fmt json -v
+kraken-biom READBASED/SRR152765*.kraken_report_bracken_species.out -o READBASED/merge_species.biom --fmt json -v
 ```
