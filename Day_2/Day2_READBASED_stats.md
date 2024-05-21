@@ -31,6 +31,8 @@ library(ggplot2)
 library(mia)
 library(tidyverse)
 library(RColorBrewer)
+library(ggrepel)
+
 ```
 
 
@@ -662,32 +664,32 @@ barplot(sort(top.coef), horiz = T, las = 1, main = "Top taxa")
 
 Community-level comparisons: Use PERMANOVA to investigate whether the community composition differs between two groups of individuals (e.g. times, or some other grouping of your choice). You can also include covariates such as type, and see how this affects the results?
 
-
-
-
 ### Beta diversity
 
 
 Often we want to know whether the microbiomes are different between conditions or groups. One way to explore this is to look at the beta-diversity in an ordination. There are different distances and approaches that can be done and explored. We will perform an NMDS on bray curtis dissimilarities of the species profiles.
 
+#### Unsupervised ordination
+
+Unsupervised ordination methods variation in the data without additional information on covariates or other supervision of the model. Among the different approaches, Multi-Dimensional Scaling (MDS) and non-metric MDS (NMDS) can be regarded as the standard. They are jointly referred to as PCoA. 
+
+A typical comparison of community compositions starts with a visual representation of the groups by a 2D ordination. Then we estimate relative abundances and MDS ordination based on Bray-Curtis index between the groups, and visualize the results.
 
 ```r
 # To ensure reproducibility we can fix the seed here. This will ensure you always get the same result each time you run your data.
 set.seed(34521)
 
-https://telatin.github.io/microbiome-bioinformatics/data/kraken-r/2021-03-33-ExploreMGprofiles_solutions.html
-species_frac_filtered <- psmelt(pseq) %>% head(20) %>% select("OTU", "Abundance", "Type", "Reads", "Time") %>%  as.data.frame()
-rownames(species_frac_filtered) <- NULL
-# Data mingling
-species_frac_filtered_f <- species_frac_filtered %>% 
-  column_to_rownames("OTU") %>% 
-  t() # transpose
+pseq <- aggregate_rare(merged_metagenomes, level = "Genus", detection = 0.1/100, prevalence = 50/100)
+pseq <- microbiome::transform(pseq, transform = "compositional")
+# abundances(pseq)
+pseq  <- abundances(pseq) %>% as.data.frame() 
+pseq <- pseq <- pseq[order(rowSums(pseq), decreasing = TRUE), ] %>% t()
 
 # Calculate distance matrix
-species_frac_filtered_dist <- vegdist(species_frac_filtered_f, method = "bray")
+species_frac_filtered_dist <- vegdist(pseq, method = "bray")
 
 # Perform NMDS on distance matrix
-nmds_spec <- metaMDS(species_frac_filtered_dist,distance = "bray",k = 2)
+nmds_spec <- metaMDS(species_frac_filtered_dist, distance = "bray",k = 2)
 ```
 
 Check the output. 
@@ -702,33 +704,124 @@ Now let’s look at the ordination. To plot the data with ggplot, we need to ext
 
 ```r
 # Extract and reshape the data to plot ordination as ggplot  and add the metadata
-nmds_spec_gg<-as.data.frame(nmds_spec$points) %>%
-  rownames_to_column("Sample") %>%
-  left_join(meta, by="Sample")
+# Convert the NMDS points to a data frame
+nmds_spec_gg <- as.data.frame(nmds_spec$points)
+
+# Add the "Sample" column based on row names
+nmds_spec_gg <- nmds_spec_gg %>% rownames_to_column("Sample")
+
+# Merge the NMDS data with the metadata by the "Sample" column
+nmds_spec_gg <- left_join(meta, nmds_spec_gg, by = "Sample")
+
+# Merge the metadata and NMDS data frames
+merged_data <- dplyr::left_join(as.data.frame(meta), as.data.frame(nmds_spec_gg), by = "Sample")
 ```
 Then we can create the plot easily and color according to the metadata. We are choosing timepoint and mocktreat for the coloring respectively. But feel free to explore other parameters.
 
 ```r
-# Let's plot and color according to time point
-ggplot(nmds_spec_gg, aes(x=MDS1,y=MDS2)) +
-  geom_point(aes(color=Time), size=3, alpha=0.5) +
-  ggtitle("NMDS colored according to Time")
+ggplot(merged_data, aes(x = MDS1, y = MDS2)) +
+    geom_point(aes(color = Time), size = 3, alpha = 0.5) +
+    geom_text_repel(aes(label = Type), size = 3, color = "black") +
+    ggtitle("NMDS colored according to Time") +
+    theme_minimal()
+
 ```
 
 ![nmds_time](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_time.png)
 
 
 ```r
-# Let's plot and color according to type
-ggplot(nmds_spec_gg, aes(x=MDS1,y=MDS2)) +
-  geom_point(aes(color=Type), size=3, alpha=0.5) +
-  ggtitle("NMDS colored according to Type")
+ggplot(merged_data, aes(x = MDS1, y = MDS2)) +
+    geom_point(aes(color = Reads), size = 3, alpha = 0.5) +
+    geom_text_repel(aes(label = Time), size = 3, color = "black") +
+    scale_color_continuous(name = "Reads") +  # Add a continuous color scale
+    ggtitle("NMDS colored according to Reads numbers") +
+    theme_minimal()
+
 ```
 ![nmds_type](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_type.png)
 
 
 
 
+A few combinations of beta diversity metrics and assay types are typically used. For instance, Bray-Curtis dissimilarity and Euclidean distance are often applied to the relative abundance and the clr assays, respectively. Besides beta diversity metric and assay type, the PCoA algorithm is also a variable that should be considered. Below, we show how the choice of these three factors can affect the resulting lower-dimensional data.
+
+```r
+# Run NMDS on relabundance assay with Bray-Curtis distances
+pseq <- aggregate_rare(merged_metagenomes, level = "Genus", detection = 0.1/100, prevalence = 50/100)
+pseq <- microbiome::transform(pseq, transform = "compositional")
+# abundances(pseq)
+pseq  <- abundances(pseq) %>% as.data.frame() 
+pseq <- pseq <- pseq[order(rowSums(pseq), decreasing = TRUE), ] %>% t()
+# Calculate distance matrix
+species_frac_filtered_dist_bray <- vegdist(pseq, method = "bray")
+# Perform NMDS on distance matrix
+nmds_spec_comp_bray <- metaMDS(species_frac_filtered_dist_bray,distance = "bray",k = 2)
+
+# Run NMDS on compositional assay with Euclidean distances
+# Calculate distance matrix
+species_frac_filtered_dist_euclidean <- vegdist(pseq, method = "euclidean")
+# Perform NMDS on distance matrix
+nmds_spec_comp_euclidean <- metaMDS(species_frac_filtered_dist_euclidean,distance = "euclidean",k = 2)
+
+# Run NMDS on clr assay with Aitchison distances
+# Calculate distance matrix
+species_frac_filtered_dist_aitchison <- vegdist(pseq, method = "robust.aitchison")
+# Perform NMDS on distance matrix
+nmds_spec_comp_aitchison <- metaMDS(species_frac_filtered_dist_aitchison,distance = "robust.aitchison",k = 2)
+
+# Run NMDS on clr assay with Euclidean distances
+pseq <- aggregate_rare(merged_metagenomes, level = "Genus", detection = 0.1/100, prevalence = 50/100)
+pseq <- microbiome::transform(pseq, transform = "clr")
+pseq  <- abundances(pseq) %>% as.data.frame() 
+pseq <- pseq <- pseq[order(rowSums(pseq), decreasing = TRUE), ] %>% t()
+# Calculate distance matrix
+species_frac_filtered_dist_euclidean <- vegdist(pseq, method = "euclidean")
+# Perform NMDS on distance matrix
+nmds_spec_clr_euclidean <- metaMDS(species_frac_filtered_dist_euclidean,distance = "euclidean",k = 2)
+
+
+
+for (i in list(nmds_spec_comp_bray, nmds_spec_comp_euclidean, nmds_spec_comp_aitchison, nmds_spec_clr_euclidean)) {
+  # Extract and reshape the data to plot ordination as ggplot  and add the metadata
+  # Convert the NMDS points to a data frame
+  nmds_spec_gg <- as.data.frame(i$points)
+  print("nmds_spec_gg 1")
+  # Add the "Sample" column based on row names
+  nmds_spec_gg <- nmds_spec_gg %>% rownames_to_column("Sample")
+  print("nmds_spec_gg 2")
+  print(head(nmds_spec_gg))
+  # Merge the NMDS data with the metadata by the "Sample" column
+  nmds_spec_gg <- left_join(meta, nmds_spec_gg, by = "Sample")
+  print("nmds_spec_gg 3")
+  head(nmds_spec_gg)
+  # Merge the metadata and NMDS data frames
+  merged_data <- dplyr::left_join(as.data.frame(meta), as.data.frame(nmds_spec_gg), by = "Sample")
+  
+  p <- ggplot(merged_data, aes(x = MDS1, y = MDS2)) +
+    geom_point(aes(color = Time), size = 3, alpha = 0.5) +
+    geom_text_repel(aes(label = Type), size = 3, color = "black") +
+    ggtitle("NMDS colored according to Time") +
+    theme_minimal()
+}
+
+# Load package for multi-panel plotting
+library(patchwork)
+
+# Generate plots for all 4 reducedDims
+plots <- lapply(c("MDS_bray", "MDS_aitchison",
+                  "NMDS_bray", "NMDS_aitchison"),
+                plotReducedDim,
+                object = c(nmds_spec_comp_bray, nmds_spec_comp_euclidean, nmds_spec_comp_aitchison, nmds_spec_clr_euclidean),
+                colour_by = "Group")
+
+                
+# Generate multi-panel plot
+wrap_plots(plots) +
+  plot_layout(guides = "collect")
+
+
+```
 
 
 
