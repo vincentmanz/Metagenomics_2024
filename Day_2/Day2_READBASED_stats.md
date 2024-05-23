@@ -17,25 +17,60 @@ In R studio.
 
 Load libraries:
 
+**Data Manipulation and Wrangling**
+
 ```r
-library(microbiome)
-library(microbiomeutilities)
+# dplyr: A grammar of data manipulation, providing a consistent set of verbs to solve common data manipulation challenges
 library(dplyr)
-library(hrbrthemes)
+
+# tibble: Provides a modern reimagining of data frames, making them more user-friendly
 library(tibble)
+
+# tidyverse: A collection of R packages designed for data science, all sharing an underlying design philosophy, grammar, and data structures
 library(tidyverse)
+```
+**Microbiome Analysis**
+```r
+# microbiome: Provides tools for microbiome data analysis and visualization
+library(microbiome)
+
+# microbiomeutilities: Extends functionalities of the microbiome package with additional utilities
+library(microbiomeutilities)
+
+# vegan: Functions for ecological analysis, including ordination methods, diversity analysis and other functions for community ecologists
 library(vegan)
+
+# compositions: Provides methods for analyzing compositional data, which is common in fields such as microbiome research
 library(compositions)
-library(pheatmap)
-library(ggplot2)
+
+# mia: Microbiome Analysis, provides functionalities for microbiome data analysis and visualization
 library(mia)
-library(tidyverse)
-library(RColorBrewer)
-library(ggrepel)
-library(patchwork)
+
+# miaViz: Visualization utilities for microbiome analysis, part of the mia package ecosystem
 library(miaViz)
 ```
 
+**Data Visualization**
+
+```r
+# ggplot2: A system for creating elegant and versatile data visualizations based on the grammar of graphics
+library(ggplot2)
+
+# hrbrthemes: Contains additional themes, theme components, and utilities for ggplot2
+library(hrbrthemes)
+
+# pheatmap: Pretty heatmaps, provides more control over the heatmap visualization
+library(pheatmap)
+
+# RColorBrewer: Provides color palettes for visualizing data, particularly useful in ggplot2 visualizations
+library(RColorBrewer)
+
+# ggrepel: Extends ggplot2 by adding better text label placement to avoid overlaps
+library(ggrepel)
+
+# patchwork: Makes it easier to combine multiple ggplot2 plots into one overall plot layout
+library(patchwork)
+```
 
 ## 1. load the data
 
@@ -44,6 +79,14 @@ First we need to load our data. Usually the biggest bottleneck between raw data 
 Let’s first load the relative abundance table of the bracken results.
 
 For this part we are using the [phyloseq](https://joey711.github.io/phyloseq/) package. The phyloseq package is a tool to import, store, analyze, and graphically display complex phylogenetic sequencing data that has already been clustered into Operational Taxonomic Units (OTUs), especially when there is associated sample data, phylogenetic tree, and/or taxonomic assignment of the OTUs. 
+
+First st your working directory: 
+
+```r
+setwd("~/Documents/project/Metagenomics_2024/Metagenomics_2024")
+```
+
+And load your two files:
 
 ```R
 merged_metagenomes <- import_biom("READBASED/merge_species.biom") 
