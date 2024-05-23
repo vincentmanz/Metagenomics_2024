@@ -18,7 +18,7 @@ Load, formating and exclude contaminants from the data.
 
 ```r
 # Import the merged metagenomes data from a BIOM file
-merged_metagenomes <- import_biom("READBASED/merge_species.biom")
+merged_metagenomes <- import_biom("DATA/merge_species.biom")
 
 # Read the metadata from a CSV file
 meta <- read.csv(file = "DATA/tryp_metadata.csv", sep = ",")
@@ -41,17 +41,8 @@ merged_metagenomes@tax_table@.Data <- substring(merged_metagenomes@tax_table@.Da
 # Rename the columns of the taxonomy table to represent taxonomic ranks
 colnames(merged_metagenomes@tax_table@.Data) <- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
 
-# Define a list of contaminants to be removed (e.g., human DNA with taxonomic ID '9606')
-contaminants <- c("9606")
-
-# Get the names of all taxa in the merged metagenomes object
-allTaxa = taxa_names(merged_metagenomes)
-
-# Remove the contaminants from the list of all taxa
-allTaxa <- allTaxa[!(allTaxa %in% contaminants)]
-
-# Prune the phyloseq object to exclude the contaminants
-merged_metagenomes = prune_taxa(allTaxa, merged_metagenomes)
+# Keep the kingdom of interest
+merged_metagenomes <- subset_taxa(merged_metagenomes, Kingdom %in% c("Archaea", "Bacteria", "Fungi", "Viruses"))
 ```
 
 
@@ -66,7 +57,7 @@ We concider that we have 3 differents block of data, viruses, fungi and bacteria
 AM_metagenomes <- phyloseq::subset_samples(merged_metagenomes, Gut == "AM")
 
 # Further subset the morning metagenomes by sample type
-block_control <- phyloseq::subset_taxa(phy_1w, Phylum == "")
+block_control <- phyloseq::subset_samples(AM_metagenomes, Type == "Control")
 block_cruzi <- phyloseq::subset_samples(AM_metagenomes, Type == "T._cruzi")
 block_rangeli <- phyloseq::subset_samples(AM_metagenomes, Type == "T._rangeli")
 
@@ -301,3 +292,95 @@ grid.arrange(plot_control[[4]], plot_cruzi[[4]], plot_rangeli[[4]], ncol = 1)
 **Wolbachia** (Ehrlichiaceae)  The obligate intracellular bacteria Wolbachia spp. are common in a wide range of insects, including sand flies, bed bugs, fleas and mosquitoes, and can cause reproduction alterations such as feminization, male killing and cytoplasmic incompatibility ([Landmann 20219](https://doi.org/10.1128/microbiolspec.BAI-0018-2019.)). In triatomines, Wolbachia has been solely reported for the genus Rhodnius, where it occurs in the intestine, salivary glands and gonads.
 
 **Curtobacterium** (Microbacteriaceae) *C. flaccumfaciens* is the only species of Curtobacterium associated with plant pathogenesis (Young et al., 1996), the presence of *C. flaccumfaciens* in the rhizosphere induced a systematic resistance in cucumber plants to pathogens.
+
+
+
+
+
+# Mofa Integrative by kingdom
+
+
+```r
+library(data.table)
+library(purrr)
+library(ggplot2)
+library(ggpubr)
+library(MOFA2)
+```
+
+```r
+dt <- fread("ftp://ftp.ebi.ac.uk/pub/databases/mofa/microbiome/data.txt.gz")
+metadata <- fread("ftp://ftp.ebi.ac.uk/pub/databases/mofa/microbiome/metadata.txt.gz")
+```
+
+
+
+
+```r
+# Subset the merged metagenomes to only include morning samples (AM)
+AM_metagenomes <- phyloseq::subset_samples(merged_metagenomes, Gut == "AM")
+
+# Further subset the morning metagenomes by sample type
+block_bacteria <- phyloseq::subset_taxa(AM_metagenomes, Phylum == "Bacteria")
+block_fungi <- phyloseq::subset_taxa(AM_metagenomes, Phylum == "Fungi")
+block_virus <- phyloseq::subset_taxa(AM_metagenomes, Phylum == "Viruses")
+
+# Aggregate rare taxa at the genus level for each subset, using specific detection and prevalence thresholds
+block_bacteria <- aggregate_rare(block_bacteria, level = "Genus", detection = 0.1 / 100, prevalence = 50 / 100)
+block_fungi <- aggregate_rare(block_fungi, level = "Genus", detection = 0.1 / 100, prevalence = 50 / 100)
+block_virus <- aggregate_rare(block_virus, level = "Genus", detection = 0.1 / 100, prevalence = 50 / 100)
+```
+
+
+
+
+# Further subset the morning metagenomes by sample type
+block_bacteria <- phyloseq::subset_taxa(merged_metagenomes, Kingdom == "Bacteria")
+#block_fungi <- phyloseq::subset_taxa(merged_metagenomes, Kingdom == "Fungi")
+block_virus <- phyloseq::subset_taxa(merged_metagenomes, Kingdom == "Viruses")
+
+# Aggregate rare taxa at the genus level for each subset, using specific detection and prevalence thresholds
+block_bacteria <- aggregate_rare(block_bacteria, level = "Genus", detection = 0.05 / 100, prevalence = 20 / 100)
+#block_fungi <- aggregate_rare(block_fungi, level = "Genus", detection = 0.1 / 100, prevalence = 50 / 100)
+block_virus <- aggregate_rare(block_virus, level = "Genus", detection = 0.05 / 100, prevalence = 20 / 100)
+
+# Transform the aggregated data using centered log-ratio (clr) transformation
+block_bacteria <- microbiome::transform(block_bacteria, transform = "clr")
+block_virus <- microbiome::transform(block_virus, transform = "clr")
+
+
+
+
+# Melt the transformed data into long format and select relevant columns
+block_bacteria_df <- psmelt(block_bacteria) %>% select(Sample, OTU, Abundance) %>%  mutate(view = "Bacteria")
+block_virus_df <- psmelt(block_virus) %>% select(Sample, OTU, Abundance) %>% mutate(view = "Virus")
+
+
+
+
+# Rename the columns for consistency
+colnames(block_bacteria_df) <- c("sample", "feature", "value", "view")
+colnames(block_virus_df) <- c("sample", "feature", "value", "view")
+
+head(block_bacteria_df)
+head(block_virus_df)
+
+merged_df <- bind_rows(block_bacteria_df, block_virus_df)
+
+## ADD col bacteria and Virus
+
+ggdensity(merged_df, x="value", fill="gray70") +
+  facet_wrap(~view, nrow=1, scales="free")
+
+mofa <- create_mofa(data = merged_df)
+
+
+plot_data_overview(mofa)
+model_opts <- get_default_model_options(mofa)
+model_opts$num_factors <- 10
+
+mofa <- prepare_mofa(mofa, model_options = model_opts)
+mofa <- run_mofa(mofa)
+plot_variance_explained(mofa, max_r2=15)
+
+
