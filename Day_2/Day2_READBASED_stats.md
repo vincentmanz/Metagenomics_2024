@@ -711,10 +711,7 @@ nmds_spec_gg <- as.data.frame(nmds_spec$points)
 nmds_spec_gg <- nmds_spec_gg %>% rownames_to_column("Sample")
 
 # Merge the NMDS data with the metadata by the "Sample" column
-nmds_spec_gg <- left_join(meta, nmds_spec_gg, by = "Sample")
-
-# Merge the metadata and NMDS data frames
-merged_data <- dplyr::left_join(as.data.frame(meta), as.data.frame(nmds_spec_gg), by = "Sample")
+merged_data <- dplyr::left_join(meta, nmds_spec_gg, by = "Sample")
 ```
 Then we can create the plot easily and color according to the metadata. We are choosing timepoint and mocktreat for the coloring respectively. But feel free to explore other parameters.
 
@@ -739,7 +736,7 @@ ggplot(merged_data, aes(x = MDS1, y = MDS2)) +
     theme_minimal()
 
 ```
-![nmds_type](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_type.png)
+![nmds_type](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_reads.png)
 
 
 
@@ -780,49 +777,42 @@ species_frac_filtered_dist_euclidean <- vegdist(pseq, method = "euclidean")
 # Perform NMDS on distance matrix
 nmds_spec_clr_euclidean <- metaMDS(species_frac_filtered_dist_euclidean,distance = "euclidean",k = 2)
 
+# List of NMDS objects and their corresponding titles
+nmds_list <- list(
+  list(data = nmds_spec_comp_bray, title = "Comp Bray"),
+  list(data = nmds_spec_comp_euclidean, title = "Comp Euclidean"),
+  list(data = nmds_spec_clr_aitchison, title = "Clr Aitchison"),
+  list(data = nmds_spec_clr_euclidean, title = "Clr Euclidean")
+)
 
+# Initialize an empty list to store plots
+plot_list <- list()
 
-for (i in list(nmds_spec_comp_bray, nmds_spec_comp_euclidean, nmds_spec_comp_aitchison, nmds_spec_clr_euclidean)) {
-  # Extract and reshape the data to plot ordination as ggplot  and add the metadata
-  # Convert the NMDS points to a data frame
-  nmds_spec_gg <- as.data.frame(i$points)
-  print("nmds_spec_gg 1")
-  # Add the "Sample" column based on row names
-  nmds_spec_gg <- nmds_spec_gg %>% rownames_to_column("Sample")
-  print("nmds_spec_gg 2")
-  print(head(nmds_spec_gg))
-  # Merge the NMDS data with the metadata by the "Sample" column
-  nmds_spec_gg <- left_join(meta, nmds_spec_gg, by = "Sample")
-  print("nmds_spec_gg 3")
-  head(nmds_spec_gg)
-  # Merge the metadata and NMDS data frames
-  merged_data <- dplyr::left_join(as.data.frame(meta), as.data.frame(nmds_spec_gg), by = "Sample")
+# Loop through each NMDS object and generate the corresponding plot
+for (nmds_item in nmds_list) {
+  nmds_spec_gg <- as.data.frame(nmds_item$data$points) %>%
+    rownames_to_column("Sample") %>%
+    dplyr::left_join(meta, by = "Sample")
   
-  p <- ggplot(merged_data, aes(x = MDS1, y = MDS2)) +
+  plot <- ggplot(nmds_spec_gg, aes(x = MDS1, y = MDS2)) +
     geom_point(aes(color = Time), size = 3, alpha = 0.5) +
     geom_text_repel(aes(label = Type), size = 3, color = "black") +
-    ggtitle("NMDS colored according to Time") +
+    ggtitle(paste("NMDS colored according to Time -", nmds_item$title)) +
     theme_minimal()
+  
+  # Add the plot to the plot list
+  plot_list[[nmds_item$title]] <- plot
 }
 
-# Load package for multi-panel plotting
-library(patchwork)
-
-# Generate plots for all 4 reducedDims
-plots <- lapply(c("MDS_bray", "MDS_aitchison",
-                  "NMDS_bray", "NMDS_aitchison"),
-                plotReducedDim,
-                object = c(nmds_spec_comp_bray, nmds_spec_comp_euclidean, nmds_spec_comp_aitchison, nmds_spec_clr_euclidean),
-                colour_by = "Group")
-
-                
-# Generate multi-panel plot
-wrap_plots(plots) +
+# Combine all plots using patchwork
+combined_plot <- wrap_plots(plot_list) +
   plot_layout(guides = "collect")
 
-
+# Print the combined plot
+print(combined_plot)
 ```
 
+![nmds_type](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_all.png)
 
 
 
