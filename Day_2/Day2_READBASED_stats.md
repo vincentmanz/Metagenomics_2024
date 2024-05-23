@@ -89,7 +89,7 @@ setwd("~/Documents/project/Metagenomics_2024/Metagenomics_2024")
 And load your two files:
 
 ```R
-merged_metagenomes <- import_biom("READBASED/merge_species.biom") 
+merged_metagenomes <- import_biom("DATA/merge_species.biom") 
 meta <- read.csv(file = "DATA/tryp_metadata.csv", sep = ",")
 ```
 
@@ -222,7 +222,7 @@ dim(abundances(merged_metagenomes_family))
 HINT
 </summary>
 
-> There are 53 taxa and 28 samples, meaning that there are 29 different Phylum level taxonomic groups. Looking at the rowData after agglomeration shows all Enterococcaceae are combined together, and all lower rank information is lost.
+> There are XX taxa and 30 samples, meaning that there are 29 different Phylum level taxonomic groups. Looking at the rowData after agglomeration shows all Enterococcaceae are combined together, and all lower rank information is lost.
 
 ```r
 head(tax_table(merged_metagenomes_family))
