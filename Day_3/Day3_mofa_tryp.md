@@ -63,7 +63,7 @@ We concider that we have 3 differents block of data, viruses, fungi and bacteria
 
 ```r
 # Subset the merged metagenomes to only include morning samples (AM)
-AM_metagenomes <- phyloseq::subset_samples(merged_metagenomes, Morning.Afternoon == "AM")
+AM_metagenomes <- phyloseq::subset_samples(merged_metagenomes, Gut == "AM")
 
 # Further subset the morning metagenomes by sample type
 block_control <- phyloseq::subset_taxa(phy_1w, Phylum == "")

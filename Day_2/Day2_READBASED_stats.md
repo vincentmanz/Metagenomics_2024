@@ -32,7 +32,8 @@ library(mia)
 library(tidyverse)
 library(RColorBrewer)
 library(ggrepel)
-
+library(patchwork)
+library(miaViz)
 ```
 
 
@@ -461,8 +462,8 @@ print(p)
 
 ![barplot](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/barplot_genus.png)
 
-## 6 Diversity
 
+## 6 Diversity
 
 Species diversity, in its simplest definition, is the number of species in a particular area and their relative abundance (evenness). Once we know the taxonomic composition of our metagenomes, we can do diversity analyses. Here we will discuss the two most used diversity metrics, α diversity (within one metagenome) and β (across metagenomes).
 
@@ -503,7 +504,6 @@ HINT
 
 
 ### Alpha diversity
-
 
 A comprehensive list of global indicators of the ecosystem state can be obtained as follows. This includes various measures of richness, evenness, diversity, dominance, and rarity with default parameters. See the individual functions for more options regarding parameter tuning.
 
@@ -613,20 +613,19 @@ print(p)
 
 Next to visualizing whether any variable is associated with differences between samples, we can also quantify the strength of the association between community composition (beta diversity) and external factors.
 
-The standard way to do this is to perform a so-called permutational multivariate analysis of variance (PERMANOVA). This method takes as input the abundance table, which measure of distance you want to base the test on and a formula that tells the model how you think the variables are associated with each other.
+Permutational Analysis of Variance (PERMANOVA; (2001)) is a widely used non-parametric multivariate method that aims to estimate the actual statistical significance of differences in the observed community composition between two groups of samples. This method takes as input the abundance table, which measure of distance you want to base the test on and a formula that tells the model how you think the variables are associated with each other.
 
 PERMANOVA tests the hypothesis that the centroids and dispersion of the community are equivalent between the compared groups. A p-value smaller than the significance threshold indicates that the groups have a different community composition. This method is implemented with the adonis2 function from the vegan package.
-
-By default, the argument by is set to "terms", in which the order of variables in the formula matters. In this case, each variable is analyzed sequentially, and the result is different when more than 1 variable is introduced and their order differs. Therefore, it is recommended to set by = "margin", which specifies that the marginal effect of each variable is analyzed individually. You can view a comparison between the two designs in chapter ?sec-compare-permanova.
-
-
 
 ```r
 otu <- abundances(pseq)
 meta <- meta(pseq)
 
 permanova <- adonis(t(otu) ~ Time,
-                    data = meta, permutations=9999, method = "euclidean")
+                    by = "margin",
+                    data = meta, 
+                    permutations = 9999, 
+                    method = "euclidean")
 ```
 
 P-value: 
@@ -662,12 +661,28 @@ barplot(sort(top.coef), horiz = T, las = 1, main = "Top taxa")
 
 **Exercises** 
 
-Community-level comparisons: Use PERMANOVA to investigate whether the community composition differs between two groups of individuals (e.g. times, or some other grouping of your choice). You can also include covariates such as type, and see how this affects the results?
+Community-level comparisons: Use PERMANOVA to investigate whether the community composition differs between two groups of individuals (e.g. times, or some other grouping of your choice). You can also include covariates such as type, gut, and see how this affects the results?
+
 
 ### Beta diversity
 
+Beta diversity quantifies the dissimilarity between communities (multiple samples), as opposed to alpha diversity which focuses on variation within a community (one sample). In microbiome research, commonly used metrics of beta diversity include the Bray-Curtis index (for compositional data), Jaccard index (for presence/absence data, ignoring abundance information), Aitchison distance (Euclidean distance for clr transformed abundances, aiming to avoid the compositionality bias), and the Unifrac distance (that takes into account the phylogenetic tree information). Notably, only some of these measures are actual distances, as this is a mathematical concept whose definition is not satisfied by certain ecological measure, such as the Bray-Curtis index. Therefore, the terms dissimilarity and beta diversity are preferred.
 
-Often we want to know whether the microbiomes are different between conditions or groups. One way to explore this is to look at the beta-diversity in an ordination. There are different distances and approaches that can be done and explored. We will perform an NMDS on bray curtis dissimilarities of the species profiles.
+| Method description             | Assay type          | Beta diversity metric |
+|--------------------------------|---------------------|-----------------------|
+| Quantitative profiling         | Absolute counts     | Bray-Curtis           |
+| Relative profiling             | Relative abundances | Bray-Curtis           |
+| Aitchison distance             | Absolute counts     | Aitchison             |
+| Aitchison distance             | clr                 | Euclidean             |
+| Robust Aitchison distance      | rclr                | Euclidean             |
+| Presence/Absence similarity    | Relative abundances | Jaccard               |
+| Presence/Absence similarity    | Absolute counts     | Jaccard               |
+| Phylogenetic distance          | Rarefied counts     | Unifrac               |
+
+In practice, beta diversity is usually represented as a *dist* object, a triangular matrix where the distance between each pair of samples is encoded by a specific cell. This distance matrix can then undergo ordination, which is an important ecological tool to reduce the dimensionality of data for a more efficient analysis and visualization. Ordination techniques aim to capture as much essential information from the data as possible and turn it into a lower dimensional representation. Dimension reduction is bound to lose information but commonly used ordination techniques can preserve relevant information of sample similarities in an optimal way, which is defined in different ways by different methods.
+
+Based on the type of algorithm, ordination methods in microbiome research can be generally divided in two categories: unsupervised and supervised ordination. The former includes Principal Coordinate Analysis (PCoA), Principal Component Analysis (PCA) and Uniform Manifold Approximation and Projection for Dimension Reduction (UMAP), whereas the latter is mainly represented by distance-based Redundancy Analysis (dbRDA). We will first discuss unsupervised ordination methods and then proceed to supervised ones.
+
 
 #### Unsupervised ordination
 
@@ -698,7 +713,7 @@ Check the output.
 # Check the output
 nmds_spec
 ```
-Here you see a kind of summary of the analysis. For example, you can see that you used 2 dimensions and the stress was approx. 0.05. In general if a stress is above 0.2 then the clustering is not reliably representing the data and should be interpreted with caution. But here the stress is below 0.2, so we are okay.
+Here you see a kind of summary of the analysis. For example, you can see that you used 2 dimensions and the stress was approx. 0.03. In general if a stress is above 0.2 then the clustering is not reliably representing the data and should be interpreted with caution. But here the stress is below 0.2, so we are okay.
 
 Now let’s look at the ordination. To plot the data with ggplot, we need to extract the coordinaties of each point from nmds_spec$points.
 
@@ -723,9 +738,7 @@ ggplot(merged_data, aes(x = MDS1, y = MDS2)) +
     theme_minimal()
 
 ```
-
 ![nmds_time](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_time.png)
-
 
 ```r
 ggplot(merged_data, aes(x = MDS1, y = MDS2)) +
@@ -736,10 +749,8 @@ ggplot(merged_data, aes(x = MDS1, y = MDS2)) +
     theme_minimal()
 
 ```
+
 ![nmds_type](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_reads.png)
-
-
-
 
 A few combinations of beta diversity metrics and assay types are typically used. For instance, Bray-Curtis dissimilarity and Euclidean distance are often applied to the relative abundance and the clr assays, respectively. Besides beta diversity metric and assay type, the PCoA algorithm is also a variable that should be considered. Below, we show how the choice of these three factors can affect the resulting lower-dimensional data.
 
@@ -761,7 +772,7 @@ species_frac_filtered_dist_euclidean <- vegdist(pseq, method = "euclidean")
 # Perform NMDS on distance matrix
 nmds_spec_comp_euclidean <- metaMDS(species_frac_filtered_dist_euclidean,distance = "euclidean",k = 2)
 
-# Run NMDS on clr assay with Aitchison distances
+# Run NMDS on compositional assay with Aitchison distances
 # Calculate distance matrix
 species_frac_filtered_dist_aitchison <- vegdist(pseq, method = "robust.aitchison")
 # Perform NMDS on distance matrix
@@ -781,7 +792,7 @@ nmds_spec_clr_euclidean <- metaMDS(species_frac_filtered_dist_euclidean,distance
 nmds_list <- list(
   list(data = nmds_spec_comp_bray, title = "Comp Bray"),
   list(data = nmds_spec_comp_euclidean, title = "Comp Euclidean"),
-  list(data = nmds_spec_clr_aitchison, title = "Clr Aitchison"),
+  list(data = nmds_spec_clr_aitchison, title = "Comp Aitchison"),
   list(data = nmds_spec_clr_euclidean, title = "Clr Euclidean")
 )
 
@@ -815,7 +826,66 @@ print(combined_plot)
 ![nmds_type](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_all.png)
 
 
+#### Unsupervised ordination
 
+dbRDA is a supervised counterpart of PCoA. It maximize the variance with respect to the covariates provided by the user. This can be used to quantify associations between each covariate and community composition (beta diversity). The table below summarizes the relations between the supervised and unsupervised ordination methods.
+
+| Supervised ordination  | Unsupervised ordination          |
+|------------------------|----------------------------------|
+| Euclidean distance     | RDA                              | PCA                         |
+| Non-Euclidean distance | dbRDA                            | PCoA/MDS, NMDS, UMAP        |
+
+
+In summary, the dbRDA is the more general method that allows a wider variety dissimilarity, or beta diversity, indices. 
+
+Let's use the package mia for this analysis, fist we transform our phyloseq object into a mia compatible object. The colData lists the covariates such as Gut and Type...
+
+```r
+pseq <-  mia::makeTreeSummarizedExperimentFromPhyloseq(merged_metagenomes)
+
+# Apply relative transform
+pseq <- mia::transformAssay(pseq,
+                       method = "relabundance")
+```
+
+dbRDA can be perfomed with the runRDA function. In addition to the arguments previously defined for unsupervised ordination, this function takes a formula to control for variables and an action to treat missing values. Along with metadata, which is the main outcome,we can treat observations missing values (not the case here). 
+
+```r
+pseq <- mia::runRDA(pseq,
+               assay.type = "relabundance",
+               formula = assay ~ Gut + Time + Type + Reads,
+               distance = "bray",
+               na.action = na.exclude)
+```
+The importance of each variable on the similarity between samples can be assessed from the results of PERMANOVA, automatically provided by the runRDA function. We see that Time explain more than 42% of the variance and it is also significant.
+
+```r
+# Store results of PERMANOVA test
+rda_info <- attr(reducedDim(pseq, "RDA"), "significance")
+rda_info$permanova
+```
+
+|          | Df | SumOfSqs |         F |  Pr(>F) | Total variance | Explained variance |
+|----------|----|----------|-----------|---------|----------------|-------------------|
+| Model    |  8 | 2.989475 | 13.067070 |   0.001 |       3.590021 |         0.832718  |
+| Gut      |  1 | 0.038869 |  1.359164 |   0.237 |       3.590021 |         0.010827  |
+| Time     |  4 | 1.512583 | 13.223075 |   0.001 |       3.590021 |         0.421330  |
+| Type     |  2 | 0.053880 |  0.942050 |   0.405 |       3.590021 |         0.015008  |
+| Reads    |  1 | 0.052313 |  1.829298 |   0.163 |       3.590021 |         0.014572  |
+| Residual | 21 | 0.600546 |     NA    |     NA  |       3.590021 |         0.167282  |
+
+
+Next, we proceed to visualize the weight and significance of each variable on the similarity between samples with an RDA plot, which can be generated with the plotRDA function from the miaViz package.
+
+```r
+# Load packages for plotting function
+library(miaViz)
+
+# Generate RDA plot coloured by clinical status
+plotRDA(pseq, "RDA", colour_by = "Time")
+```
+
+![nmds_type](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/dbrda_plot.png)
 
 
 ### Confounding effects
@@ -827,5 +897,4 @@ Confounders can be defined as variables that are related to and affect the appar
 
 - Confounders resulting from experimental models, such as batch effects and sample history
 
-Controlling for confounders is an important practice to reach an unbiased conclusion. To perform causal inference, it is crucial that the method is able to include confounders in the model. This is not possible with statistical tests of general use, such as the Wilcoxon test. In contrast, methods that target Differential Abundance Analysis (DAA), such as those described in this chapter, allow controlling for confounders. In the following examples, we will perform DAA with a main independent variable and a few confounders.
-
+Controlling for confounders is an important practice to reach an unbiased conclusion. To perform causal inference, it is crucial that the method is able to include confounders in the model. This is not possible with statistical tests of general use, such as the Wilcoxon test.
