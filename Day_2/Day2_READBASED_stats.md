@@ -2,7 +2,7 @@
 
 | Time      | Activity                      | Slides                                | Hands-on                                                |
 |-----------|-------------------------------|---------------------------------------|---------------------------------------------------------|
-| Morning   | Read Base analysis            |                                       |       [Link here](Readbased.md)                         | 
+| Morning   | Read Base analysis            |                                       |       [Link here](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/Day2_READBASED_stats.md)                         | 
 
 
 
