@@ -1,13 +1,9 @@
 ---
----
 title: "R for beginner"
 author: "Vincent Manzanilla, INTERTRYP"
-output:
-  word_document: default
-  html_document: default
-editor_options:
-  chunk_output_type: inline
+output: github_document
 ---
+
 
 ## How to install R?
 ### Useful link
