@@ -26,7 +26,6 @@ k2_standard_08gb = Standard with DB capped at 8 GB: Refeq archaea, bacteria, vir
 
 ```bash
 wget https://genome-idx.s3.amazonaws.com/kraken/k2_pluspfp_08gb_20240112.tar.gz
-
 ```
 
 

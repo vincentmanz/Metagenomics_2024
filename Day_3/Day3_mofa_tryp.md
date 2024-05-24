@@ -491,7 +491,8 @@ plot_data_scatter(mofa,
                   features = 6,
                   dot_size = 3,
                   color_by = "Time",
-                  legend = T
+                  legend = T,
+                  sign = "positive"
 )
 ```
 

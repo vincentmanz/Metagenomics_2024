@@ -84,13 +84,18 @@ The contents of the Trypanosoma set file should look like this:
 
 ```bash
 $ head metadatas.txt
-Sample	SRA identifier	Type	Time	Number-of-days	Midgut
-T0ContAM	SRR15276521	Control	T0	0	AM
-T0ContPM	SRR15276520	Control	T0	0	PM
-T0cruzAM	SRR15276539	T._cruzi	T0	0	AM
-T0cruzPM	SRR15276528	T._cruzi	T0	0	PM
-T0rangAM	SRR15276527	T._rangeli	T0	0	AM
 
+mamba activate meta_quito_2024
+Sample,SRA identifier,Type,Time,Number-of-days,Gut,Reads
+T1rangPM,SRR15276518,T._rangeli,T1,1,PM,7.70124
+T1rangAM,SRR15276519,T._rangeli,T1,1,AM,42.786669
+T0ContPM,SRR15276520,Control,T0,0,PM,12.945862
+T0ContAM,SRR15276521,Control,T0,0,AM,33.104564
+T1cruzPM,SRR15276522,T._cruzi,T1,1,PM,9.564389
+T1cruzAM,SRR15276523,T._cruzi,T1,1,AM,18.341077
+T1ContAM,SRR15276524,Control,T1,1,AM,19.498048
+T1ContPM,SRR15276525,Control,T1,1,PM,9.575527
+T0rangPM,SRR15276526,T._rangeli,T0,0,PM,8.858336
 ```
 
 # Quality control and trimming of the raw reads
@@ -100,7 +105,7 @@ T0rangAM	SRR15276527	T._rangeli	T0	0	AM
 
 ```bash
 USER=your_username
-mamba activate QC_env
+mamba activate meta_quito_2024
 ```
 > QC_env is a conda environment with fastqc, multiqc and cutadapt installed.
 
