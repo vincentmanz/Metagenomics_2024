@@ -30,7 +30,7 @@ getwd()
 
 **To change my working directory from the console**
 
-```{r eval=FALSE}
+```{r setwd,eval=FALSE}
 setwd("/path/to/my/fancy/project/")
 ```
 
@@ -43,7 +43,7 @@ If you are using a Rproject, you don't need to change your working directory.
 
 The command `help()` is the 911
 
-```{r eval=FALSE}
+```{r help, eval=FALSE}
 # exemple with function read.table
 help("read.table")
 #other exemple of 911
@@ -59,19 +59,19 @@ example("plot")
 You can install new packages by clicking directly in Rstudio
 or by command line (the best way for me)
 
-```{r eval=FALSE}
+```{r install,eval=FALSE}
 install.packages("your_package") # for packages on CRAN mirror
 ```
 
 For packages from Bioconductor (specifically for bioinformatic): 
 
-```{r eval=FALSE}
+```{r biomanger, eval=FALSE}
 BiocManager::install("your_package")
 ```
 
 or from github (using the package devtools)
 
-```{r eval=FALSE}
+```{r github, eval=FALSE}
 devtools::install_github("your_package")
 ```
 
@@ -79,7 +79,7 @@ devtools::install_github("your_package")
 
 To use functions from a specific package you can either load the entire package:
 
-```{r eval=FALSE}
+```{r lib, eval=FALSE}
 library("your package1")
 library("your package2")
 library("your package3")
@@ -87,7 +87,7 @@ library("your package3")
 
 or call the function this way:
 
-```{r eval=FALSE}
+```{r fuction, eval=FALSE}
 your_package::yourfunction()
 ```
 
@@ -99,7 +99,7 @@ your_package::yourfunction()
 An expression is directly evaluated and the result is displayed on terminal
 Example : 
 
-```{r}
+```{r op}
 2 + 3
 sqrt(25)
 ```
@@ -110,19 +110,19 @@ An assignment is an expression stored in object or variable.
 In this example expression, constant, array, matrix, data frame, list
 Example :
 
-```{r}
+```{r op1}
 a <- 2 + 3
-b <- "madame"
+b <- "bird"
 ```
 
 **<span style="color: red;"> What happens when you execute this cell?</span>**
 
-```{r}
+```{r op3}
 a
 b
 ```
 
-```{r}
+```{r op4}
 a <- 10
 b <- "5"
 ```
@@ -132,7 +132,7 @@ somme <- a + b
 ```
 
 **<span style="color: red;"> Why do we have an error ? I need to know the type of the object</span>**
-```{r}
+```{r op5}
 str(a)
 str(b)
 ```
@@ -140,12 +140,12 @@ str(b)
 
 We can also perform mathematical operations on numerical objects.
 
-```{r}
+```{r op6}
 log(a) # to obtain the logarithm of a
 sqrt(a)# to obtain the square root of a
 ```
 
-```{r}
+```{r op7}
 # we can compare it
 log(a) > sqrt(a)
 ```
@@ -156,7 +156,7 @@ log(a) > sqrt(a)
 
 Vectors are objects composed by values with the same type or (i.e, numeric, characters...)
 
-```{r}
+```{r op8}
 V1 <- c(2, 6, 9) # numeric vector
 V2 <- c("monday", "Tuesday", "Wednesday") # character vector
 V3 <- rep(6, 3) # repetition of the same value
@@ -168,7 +168,7 @@ V5
 
 To know the number of value inside a vector
 
-```{r}
+```{r op9}
 length(V1)
 ```
 
@@ -176,7 +176,7 @@ length(V1)
 
 Filter a vector according to criteria
 
-```{r}
+```{r op10}
 
 # Example : with list of value (a vector)
 
@@ -205,7 +205,7 @@ x[x != 5]
 
 Filter a vector according to several criteria
 
-```{r}
+```{r vec}
 # 3 lists : ages, sexes et poids
 
 age <- c(20, 30, 40,
@@ -266,19 +266,19 @@ are of different modes (i.e, numeric, characters...)
 
 Load a data frame
 
-```{r}
+```{r iris}
 data(iris)
 ```
 
 Visualise the data frame in a table
 
-```{r eval=FALSE}
+```{r view, eval=FALSE}
 View(iris)
 ```
 
 Display its internal structure
 
-```{r}
+```{r str}
 str(iris)
 ```
 
@@ -286,7 +286,7 @@ str(iris)
 
 ##### How to build your own data frame
 
-```{r}
+```{r df}
 date <- c("1_monday", "2_Tuesday", "3_Wednesday",
           "4_Thursday", "5_Friday", "6_Sturday",
           "7_Sunday")
@@ -334,7 +334,7 @@ function(argument1, argument2, option1, ... ,option10)
 
 ### Usual functions for data frame
 
-```{r, eval=FALSE}
+```{r usual, eval=FALSE}
 head() # to know first line of your data frame
 class()# return the class of the object. Ex : data.frame, matrix, list ....
 str()# return the structure of the object. Ex : numeric, factor, character....
@@ -349,7 +349,7 @@ apply() # Returns a vector or array or list of values obtained by applying a fun
 
 **Example function row.names, class and str**
 
-```{r}
+```{r df2}
 df2 <- data.frame(x = c(TRUE, FALSE, NA, NA), y = c(12, 34, 56, 78))
 df2
 row.names(df2) <- paste("row", 1 : 4, sep = "_")
@@ -360,7 +360,7 @@ str(df2)
 
 **Example function apply**
 
-```{r}
+```{r example_df}
 head(df)
 class(df)
 str(df)
@@ -406,19 +406,19 @@ The most commonly used tidyverse packages are loaded in your session:
 
 
 
-```{r}
+```{r tidy}
 tidyverse::tidyverse_packages()
 ```
 ##### Filter and select variable in data frame
 
-```{r}
+```{r tidy2}
 library(tidyverse)
 data("iris")
 #To select a variable with tidyverse
 dplyr::select(iris, Species)
 ```
 
-```{r}
+```{r dplyr}
 #To select several variables with tidyverse
 dplyr::select(iris,Species, Sepal.Length, Sepal.Width)
 
@@ -437,7 +437,7 @@ The pipe <span style="color: steelblue;"> **|>** </span>, or <span style="color:
 
 The useful command to manage data frame : 1) select() to select vector or variable from a data frame ; 2) filter() is used to subset a data frame, retaining all rows that satisfy your conditions ; mutate() adds new variables and preserves existing ones.
 
-```{r}
+```{r dplyr1}
 library(dplyr)
 
 iris %>%
@@ -446,7 +446,7 @@ iris %>%
 
 ```
 
-```{r}
+```{r dplyr app}
 iris %>%
   select(Sepal.Length, Species) %>%
   mutate(Sepal.Length2 = Sepal.Length * 2) %>%
@@ -469,7 +469,7 @@ iris %>%
 **<span style="color: red;"> These commands are non-persistent, no changes are made on the original iris data frame.</span>**
 **<span style="color: red;">If you want to store it, you must assign your changes to a object</span>**
 
-```{r}
+```{r dplyr_iris}
 iris_modif <- iris %>%
   select(Sepal.Length, Species) %>%
   group_by(Species) %>%
@@ -489,13 +489,8 @@ The main parameter are :
 - **sep** : the field separator character. Values on each line of the file are separated by this character. If sep = "" (the default for read.table) the separator is ‘white space’, that is one or more spaces, tabs, newlines or carriage returns.
 - **dec** : the character used in the file for decimal points.
 
-```{r}
-ds <- read.table(here::here("data",
-                            "rforbeginers",
-                            "exemple_read.txt"),
-                 header = TRUE,
-                 sep = ";",
-                 dec = ",")
+```{r readt}
+ds <- read.table(file="../DATA/example_read.txt", sep = ";", header = TRUE)
 ```
 
 
@@ -513,13 +508,13 @@ The function is similar to `read.table()`
 - **dec** : cf read.table
 - **na** : give a symbole for missing data, by convention is NA
 
-```{r}
+```{r WRITE}
 write.table(ds, "ds.txt", sep = "\t", dec = ".")
 ```
 
 To keep our working directory tidy, we now delete `ds.txt`
 
-```{r}
+```{r REMOVE}
 file.remove("ds.txt")
 ```
 Exo 4
@@ -535,26 +530,26 @@ Exo 4
 - *aesthetics* : allows to indicate the x and y variables. It can also be used to control the color, size and shape of the points, etc...
 - *geometry* : corresponds to the type of graph (histogram, box plot, line plot, .....)
 
-```{r}
+```{r ggplot}
 library(ggplot2)
 # scatter plot 
 ggplot(data = iris, aes(Sepal.Length, Sepal.Width)) + #  what I want to represent 
   geom_point() # how I represent it
 ```
 
-```{r}
+```{r ggplot1}
 # We can calorize and give a shape by month
 # scatter plot
 ggplot(data = iris, aes(Sepal.Length, Sepal.Width)) +
   geom_point(aes(color = Species, shape = Species)) # shape is the same thing with classical plot on R
 ```
-```{r}
+```{r ggplot2}
 # You can change manually color with la fonction scale_color_manual()
 ggplot(data = iris, aes(Sepal.Length, Sepal.Width)) +
   geom_point(aes(color = Species, shape = Species)) +
   scale_color_manual(values = c("#00AFBB", "#E7B800", "#FC4E07"))
 ```
-```{r}
+```{r ggplot3}
 #Boxplot
 ggplot(data = iris, aes(Species, Sepal.Length)) + #  what I want to represent 
   geom_boxplot(aes(color = Species, fill = Species), alpha=0.4) + # how I represent it. Here I changed geometry using boxplot.
@@ -568,7 +563,7 @@ Using the function `pdf()`
 
 Firstly you have to store plot inside and object
 
-```{r}
+```{r ggplot4}
 #Boxplot
 g1 <- ggplot(data = iris, aes(Species, Sepal.Length)) + #  what I want to represent 
   geom_boxplot(aes(color = Species, fill = Species), alpha = 0.4) +# how I represent it. Here I changed geometry using boxplot.
@@ -576,41 +571,14 @@ g1 <- ggplot(data = iris, aes(Species, Sepal.Length)) + #  what I want to repres
   theme_minimal()
 ```
 
-```{r}
-pdf("yourfile.pdf")
+```{r ggplot5}
+pdf("pictures/yourfile.pdf")
 g1
 dev.off()
 ```
 
 or `ggplot2::ggsave()`
 
-```{r}
-ggsave("yourfile2.pdf", g1)
-```title: "R tutorial"
-output: html_document
-date: "`r Sys.Date()`"
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r ggplot6}
+ggsave("pictures/yourfile2.png", g1)
 ```
-
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
