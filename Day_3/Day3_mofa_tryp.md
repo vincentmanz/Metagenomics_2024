@@ -483,3 +483,16 @@ plot_data_scatter(mofa,
 ```
 
 ![factor)](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_3/img/correlation.png)
+
+```r
+plot_data_scatter(mofa, 
+                  factor = 1, 
+                  view = "Bacteria", 
+                  features = 6,
+                  dot_size = 3,
+                  color_by = "Time",
+                  legend = T
+)
+```
+
+![factor)](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_3/img/correlation_positive.png)
