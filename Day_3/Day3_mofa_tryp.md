@@ -72,7 +72,7 @@ You can use different normalisation and plot the density of the data to check th
 
 ```r
 # Transform the aggregated data using centered log-ratio (clr) transformation
-block_control_aggre <- microbiome::transform(block_control_aggre, transform = "clr")
+block_control_aggre <- microbiome::transform(block_control_aggre, transform = "clr") 
 block_cruzi_aggre <- microbiome::transform(block_cruzi_aggre, transform = "clr")
 block_rangeli_aggre <- microbiome::transform(block_rangeli_aggre, transform = "clr")
 ```
@@ -80,14 +80,23 @@ block_rangeli_aggre <- microbiome::transform(block_rangeli_aggre, transform = "c
 
 ```r
 # Melt the transformed data into long format and select relevant columns
-block_control_aggre_df <- psmelt(block_control_aggre) %>% select(Time, OTU, Type, Abundance)
-block_cruzi_aggre_df <- psmelt(block_cruzi_aggre) %>% select(Time, OTU, Type, Abundance)
-block_rangeli_aggre_df <- psmelt(block_rangeli_aggre) %>% select(Time, OTU, Type, Abundance)
+block_control_aggre_df <- psmelt(block_control_aggre) %>% select(Time, OTU, Abundance) %>%  mutate(view = "Control")
+block_cruzi_aggre_df <- psmelt(block_cruzi_aggre)  %>% select(Time, OTU, Abundance) %>%  mutate(view = "T. cruzi")
+block_rangeli_aggre_df <- psmelt(block_rangeli_aggre) %>% select(Time, OTU, Abundance) %>%  mutate(view = "T. rangeli")
 
 # Rename the columns for consistency
-colnames(block_control_aggre_df) <- c("sample", "feature", "view", "value")
-colnames(block_cruzi_aggre_df) <- c("sample", "feature", "view", "value")
-colnames(block_rangeli_aggre_df) <- c("sample", "feature", "view", "value")
+colnames(block_control_aggre_df) <-  c("sample", "feature", "value", "view")
+colnames(block_cruzi_aggre_df) <- c("sample", "feature", "value", "view")
+colnames(block_rangeli_aggre_df) <- c("sample", "feature", "value", "view")
+
+head(block_control_aggre_df)
+head(block_cruzi_aggre_df)
+head(block_rangeli_aggre_df)
+
+
+merged_df <- bind_rows(block_cruzi_aggre_df, block_rangeli_aggre_df, block_control_aggre_df)
+head(merged_df)
+
 ```
 
 The data display real-valued distributions that are appropiately modelled using the gaussian likelihood. The normalization is well done. 
@@ -105,47 +114,13 @@ Z nomalization
 ![prevalence](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_3/img/density_Z.png)
 
 
-Back to the data transformation.
-
-```r
-# Pivot the data from long to wide format, remove the 'view' column, and set the 'feature' column as row names
-block_control_aggre_df <- pivot_wider(data = block_control_aggre_df, names_from = sample, values_from = value) %>% select(-view) %>% tibble::column_to_rownames(var = "feature")
-block_cruzi_aggre_df <- pivot_wider(data = block_cruzi_aggre_df, names_from = sample, values_from = value) %>% select(-view) %>% tibble::column_to_rownames(var = "feature")
-block_rangeli_aggre_df <- pivot_wider(data = block_rangeli_aggre_df, names_from = sample, values_from = value) %>% select(-view) %>% tibble::column_to_rownames(var = "feature")
-
-# Get the row names for each data frame
-row_control <- row.names(block_control_aggre_df)
-row_cruzi <- row.names(block_cruzi_aggre_df)
-row_rangeli <- row.names(block_rangeli_aggre_df)
-
-# Convert the data frames to numeric matrices
-block_control_aggre_df_n <- sapply(block_control_aggre_df, as.numeric)
-block_cruzi_aggre_df_n <- sapply(block_cruzi_aggre_df, as.numeric)
-block_rangeli_aggre_df_n <- sapply(block_rangeli_aggre_df, as.numeric)
-
-# Reassign the row names to the numeric matrices
-row.names(block_control_aggre_df_n) <- row_control
-row.names(block_cruzi_aggre_df_n) <- row_cruzi
-row.names(block_rangeli_aggre_df_n) <- row_rangeli
-
-# Order the columns of each numeric matrix alphabetically by column names
-block_control_aggre_df_n <- block_control_aggre_df_n[, order(colnames(block_control_aggre_df_n))]
-block_cruzi_aggre_df_n <- block_cruzi_aggre_df_n[, order(colnames(block_cruzi_aggre_df_n))]
-block_rangeli_aggre_df_n <- block_rangeli_aggre_df_n[, order(colnames(block_rangeli_aggre_df_n))]
-
-# Combine the numeric matrices into a list and name the elements accordingly
-matrix_list <- list(block_control_aggre_df_n, block_cruzi_aggre_df_n, block_rangeli_aggre_df_n)
-names(matrix_list) <- c("Control", "T.cruzi", "T.rangeli")
-```
-
-
 # Integration in Mofa
 
 ## Create MOFA object
 
 ```r
 # Create a MOFA (Multi-Omics Factor Analysis) object from the list of matrices
-mofa <- create_mofa_from_matrix(data = matrix_list)
+mofa <- create_mofa(data = matrix_list)
 ```
 
 Visualise data structure, sanity check. 
@@ -309,8 +284,31 @@ library(MOFA2)
 ```
 
 ```r
-dt <- fread("ftp://ftp.ebi.ac.uk/pub/databases/mofa/microbiome/data.txt.gz")
-metadata <- fread("ftp://ftp.ebi.ac.uk/pub/databases/mofa/microbiome/metadata.txt.gz")
+
+setwd("~/Documents/project/Metagenomics_2024/Metagenomics_2024")
+
+merged_metagenomes <- import_biom("DATA/merge_species.biom") 
+meta <- read.csv(file = "DATA/tryp_metadata.csv", sep = ",")
+
+# Sort the 'meta' data frame by the 'SRA.identifier' column
+meta <- meta %>% arrange(row_number(SRA.identifier))
+
+# Associate the sorted metadata to the phyloseq object as sample data
+merged_metagenomes@sam_data <- sample_data(meta)
+
+# Extract the sample names from the 'meta' data frame
+column_name <- meta %>% pull(Sample)
+
+# Associate the extracted sample names to the phyloseq object
+sample_names(merged_metagenomes) <- column_name
+
+# Remove the unnecessary 'k_' prefix in the taxonomy data
+merged_metagenomes@tax_table@.Data <- substring(merged_metagenomes@tax_table@.Data, 4)
+
+# Rename the columns of the taxonomy table to represent taxonomic ranks
+colnames(merged_metagenomes@tax_table@.Data) <- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
+
+merged_metagenomes <- subset_taxa(merged_metagenomes, Kingdom %in% c("Archaea", "Bacteria", "Fungi", "Viruses"))
 ```
 
 
@@ -318,22 +316,22 @@ metadata <- fread("ftp://ftp.ebi.ac.uk/pub/databases/mofa/microbiome/metadata.tx
 
 ```r
 # Subset the merged metagenomes to only include morning samples (AM)
-AM_metagenomes <- phyloseq::subset_samples(merged_metagenomes, Gut == "AM")
-
+#AM_metagenomes <- phyloseq::subset_samples(merged_metagenomes, Gut == "AM")
+AM_metagenomes <- merged_metagenomes
 # Further subset the morning metagenomes by sample type
-block_bacteria <- phyloseq::subset_taxa(AM_metagenomes, Phylum == "Bacteria")
-block_fungi <- phyloseq::subset_taxa(AM_metagenomes, Phylum == "Fungi")
-block_virus <- phyloseq::subset_taxa(AM_metagenomes, Phylum == "Viruses")
+block_bacteria <- phyloseq::subset_taxa(AM_metagenomes, Kingdom == "Bacteria")
+#block_fungi <- phyloseq::subset_taxa(AM_metagenomes, Kingdom == "Fungi")
+block_virus <- phyloseq::subset_taxa(AM_metagenomes, Kingdom == "Viruses")
 
 # Aggregate rare taxa at the genus level for each subset, using specific detection and prevalence thresholds
 block_bacteria <- aggregate_rare(block_bacteria, level = "Genus", detection = 0.1 / 100, prevalence = 50 / 100)
-block_fungi <- aggregate_rare(block_fungi, level = "Genus", detection = 0.1 / 100, prevalence = 50 / 100)
+#block_fungi <- aggregate_rare(block_fungi, level = "Genus", detection = 0.1 / 100, prevalence = 50 / 100)
 block_virus <- aggregate_rare(block_virus, level = "Genus", detection = 0.1 / 100, prevalence = 50 / 100)
 ```
 
 
 
-
+```r
 # Further subset the morning metagenomes by sample type
 block_bacteria <- phyloseq::subset_taxa(merged_metagenomes, Kingdom == "Bacteria")
 #block_fungi <- phyloseq::subset_taxa(merged_metagenomes, Kingdom == "Fungi")
@@ -348,39 +346,140 @@ block_virus <- aggregate_rare(block_virus, level = "Genus", detection = 0.05 / 1
 block_bacteria <- microbiome::transform(block_bacteria, transform = "clr")
 block_virus <- microbiome::transform(block_virus, transform = "clr")
 
-
-
-
 # Melt the transformed data into long format and select relevant columns
 block_bacteria_df <- psmelt(block_bacteria) %>% select(Sample, OTU, Abundance) %>%  mutate(view = "Bacteria")
 block_virus_df <- psmelt(block_virus) %>% select(Sample, OTU, Abundance) %>% mutate(view = "Virus")
-
-
-
 
 # Rename the columns for consistency
 colnames(block_bacteria_df) <- c("sample", "feature", "value", "view")
 colnames(block_virus_df) <- c("sample", "feature", "value", "view")
 
-head(block_bacteria_df)
-head(block_virus_df)
+#head(block_bacteria_df)
+#head(block_virus_df)
 
 merged_df <- bind_rows(block_bacteria_df, block_virus_df)
+```
 
-## ADD col bacteria and Virus
 
-ggdensity(merged_df, x="value", fill="gray70") +
+# Density plot abundance
+
+```r
+ggdensity(rbind(block_control_aggre_df, block_cruzi_aggre_df,block_rangeli_aggre_df), x="value", fill="gray70") +
   facet_wrap(~view, nrow=1, scales="free")
+```
 
+```r
+# Create a MOFA (Multi-Omics Factor Analysis) object from the list of matrices
 mofa <- create_mofa(data = merged_df)
+```
 
 
-plot_data_overview(mofa)
+## Prepare MOFA object
+
+```r
+# Get the default model options for the MOFA object
 model_opts <- get_default_model_options(mofa)
+
+# Set the number of factors to be inferred in the model to 5
 model_opts$num_factors <- 10
 
+# Prepare the MOFA object with the specified model options
 mofa <- prepare_mofa(mofa, model_options = model_opts)
-mofa <- run_mofa(mofa)
+
+# Run the MOFA model using the Basilisk environment (for reproducibility and isolation of dependencies)
+mofa <- run_mofa(mofa, use_basilisk = TRUE)
+```
+# Add sample metadata to the model
+
+```r
+colnames(meta) <- c("sample", "SRA.identifier", "Type", "Time", "Number.of.days", "Gut", "Reads")
+samples_metadata(mofa) <- meta
+```
+
+Mofa will complain about the sample size. We have only 5 samples, we should have at list 20.
+
+# Downstream analysis
+
+```r
+plot_variance_explained(mofa, plot_total = T)[[2]]
+
+
 plot_variance_explained(mofa, max_r2=15)
+```
+
+```r
+gut.colors <- c(
+  "AM" = "#66C2A5", 
+  "PM" = "#8DA0CB"
+  )
+time.colors <- c(
+  "T0" = "#66C2A5", 
+  "T1" = "#8DA0CB",
+  "T2" = "#E78AC3",
+  "T3" = "#FC8D62",
+  "T7" = "#D8EC82"
+  )
+type.colors <- c(
+  "Control" = "#66C2A5",
+  "T._rangeli" = "#FC8D62",
+  "T._cruzi" = "#D8EC82"
+  )
+```
 
 
+```r
+plot_data_heatmap(mofa, 
+                  factor = 1, 
+                  view = "Bacteria", 
+                  features = 20,
+                  denoise = TRUE,
+                  cluster_rows = T, cluster_cols = F,
+                  show_colnames =T, show_rownames = T,
+                  annotation_samples = c("Gut", "Time", "Type"),  
+                  annotation_colors = list("Time"=time.colors), 
+                  annotation_legend = TRUE,
+                  scale = "row"
+)
+```
+
+```r
+p <- plot_factors(mofa, 
+                  factors = c(1,2), 
+                  color_by = "Time", 
+                  dot_size = 4
+) + scale_fill_manual(values=time.colors)
+p +
+  # geom_density_2d(aes_string(color="color_by")) +
+  stat_ellipse(aes(color=color_by), geom = "polygon", alpha=0.25) +
+  scale_color_manual(values=time.colors)
+```
+
+
+
+```r
+plot_factor(mofa,
+            factor = 1,
+            color_by = "Time", 
+            dot_size = 5,
+            scale = TRUE, 
+            legend = TRUE, 
+            dodge = TRUE,
+) +
+  scale_color_manual(values=time.colors) + 
+  scale_fill_manual(values=time.colors)
+```
+
+![factor)](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_3/img/factor_value.png)
+
+```r
+plot_data_scatter(mofa, 
+                  factor = 1, 
+                  view = "Bacteria", 
+                  features = 6,
+                  dot_size = 3,
+                  color_by = "Time",
+                  legend = T
+)
+```
+
+![factor)](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_3/img/correlation.png)
