@@ -1,11 +1,3 @@
----
-title: "Part 0: R for beginner"
-output: html_document
-author: "Marc Garel, MIO"
-editor_options: 
-  chunk_output_type: inline
----
-
 ## How to install R?
 ### Useful link
 
