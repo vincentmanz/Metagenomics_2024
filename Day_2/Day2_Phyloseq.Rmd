@@ -108,7 +108,7 @@ meta <- read.csv(file = "../DATA/tryp_metadata.csv", sep = ",")
 
 Any data already in an R session can be annoated/coerced to be recognized by phyloseq’s functions and methods. This is important, because there are lots of ways you might receive data related to a microbiome project, and not all of these will come from a popular server or workflow that is already supported by a phyloseq import function. 
 
-![phyloseq](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/phyloseq.png)
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/phyloseq.png)
 
 - **otu_table** - Works on any numeric matrix. You must also specify if the species are rows or columns
 - **tax_table** - Works on any character matrix. The rownames must match the OTU names (taxa_names) of the otu_table if you plan to combine it with a phyloseq-object.
@@ -254,7 +254,7 @@ Let us check for distribution of number of sequences retained from the Kraken/Br
 ```{r plot, eval=FALSE}
 plot_read_distribution(merged_metagenomes, "Type", plot.type = "density")
 ```
-![density](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/density_reads.png)
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/density_reads.png)
 
 *You can try to plot with diffrent metadata.*
 
@@ -272,7 +272,7 @@ ggplot(df) +
 ```
 
 
-![density](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/reads_count.png)
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/reads_count.png)
 
 
 ### Prevalence - Detection 
@@ -306,7 +306,7 @@ p1 + scale_x_log10()
 
 Each point corresponds to a different or unique taxon. The y-axis represents the fraction of samples, these taxa are present. The low prevalence suggests there is a low overlap across samples. 
 
-![prevalence](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/prevalence.png)
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/prevalence.png)
 
 **Q: Which taxa is present in all samples and with a high abundance?**
 
@@ -361,7 +361,7 @@ ranacapa::ggrare(pseq, step = 10, color = "Sample", se = FALSE) +
     geom_vline(xintercept = min(sample_sums(pseq)), color = "gray60")
 ```
 
-![rare](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/rare.png)
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/rare.png)
  ***Q: What do you observe?***
 
 ### Data Normalization
@@ -465,7 +465,7 @@ print(p)
  
 ```
 
-![barplot](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/barplot_family.png)
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/barplot_family.png)
 
 **Q: Does the profiles look similar between samples? Can you spot any trends?**
 
@@ -529,7 +529,7 @@ p <- plot_composition(pseq,
 print(p)
 ```
 
-![barplot](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/barplot_genus.png)
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/barplot_genus.png)
 
 
 ## 6 Diversity
@@ -538,12 +538,12 @@ Species diversity, in its simplest definition, is the number of species in a par
 
 - *α* Diversity: Can be represented only as richness (, i.e., the number of different species in an environment), or it can be measured considering the abundance of the species in the environment as well (i.e., the number of individuals of each species inside the environment). To measure α-diversity, we use indexes such as Shannon’s, Simpson’s, Chao1, etc.
 
-![density_plot](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/diversity1.png)
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/diversity1.png)
 *Alpha diversity is calculated according to fish diversity in a pond. Here, alpha diversity is represented in its simplest way: Richness.*
 
 In the next example, we will look at the α and the β components of the diversity of a dataset of fishes in three lakes. The most simple way to calculate the β-diversity is to calculate the distinct species between two lakes (sites). Let us take as an example the diversity between Lake A and Lake B. The number of species in Lake A is 3. To this quantity, we will subtract the number of these species that are shared with the Lake B: 2. So the number of unique species in Lake A compared to Lake B is (3-2) = 1. To this number, we will sum the result of the same operations but now take Lake B as our reference site. In the end, the β diversity between Lake A and Lake B is (3-2) + (3-2) = 2. This process can be repeated, taking each pair of lakes as the focused sites.
 
-![density_plot](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/diversity2.png)
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/diversity2.png)
 *Alpha and beta diversity indexes of fishes in a pond.*
 
 - *β* diversity mesures how different two or more communities are, either in their composition (richness) or in the abundance of the organisms that compose it (abundance).
@@ -553,7 +553,7 @@ In the next example, we will look at the α and the β components of the diversi
 - *UniFrac*: Measures the phylogenetic distance; how alike the trees in each community are. There are two types, without weights (diversity) and with weights (diversity and abundance)
 There are different ways to plot and show the results of such analysis. Among others, PCA, PCoA, or NMDS analysis are widely used.
 
-![density_plot](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/diversity3.png)
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/diversity3.png)
 
 **Q: Which of the options below is true for the alpha diversity in lakes A, B, and beta diversity between lakes A and B, respectively?**
 
@@ -607,7 +607,7 @@ p.shannon <- boxplot_alpha(pseq,
 p.shannon
 ```
 
-![shanon](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/shanon.png)
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/shanon.png)
 
 Alternative: 
 
@@ -668,7 +668,7 @@ Each of these metrics can give an insight into the distribution of the OTUs insi
 Check normality of data: Shapiro Test & QQ-plots. 
 Shapiro: H0 is «data follow normal distribution», H1 is «data do not follow normal distribution». 
 
-![shap1](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/shap1.png)
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/shap1.png)
 
 Use the custom function indices_normality() (defined in HELPER/indices_normality.R) plots the results of Shapiro test as well as Q-Qplots.
 
@@ -685,7 +685,7 @@ tab |>
   indices_normality(nrow = 2, ncol = 2)
 ```
 
-![shap1](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/shap.png)
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/shap.png)
 
 
 

@@ -397,12 +397,7 @@ because there are lots of ways you might receive data related to a
 microbiome project, and not all of these will come from a popular server
 or workflow that is already supported by a phyloseq import function.
 
-<figure>
-<img
-src="https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/phyloseq.png"
-alt="phyloseq" />
-<figcaption aria-hidden="true">phyloseq</figcaption>
-</figure>
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/phyloseq.png)
 
 - **otu_table** - Works on any numeric matrix. You must also specify if
   the species are rows or columns
@@ -841,12 +836,7 @@ Kraken/Bracken approach.
 plot_read_distribution(merged_metagenomes, "Type", plot.type = "density")
 ```
 
-<figure>
-<img
-src="https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/density_reads.png"
-alt="density" />
-<figcaption aria-hidden="true">density</figcaption>
-</figure>
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/density_reads.png)
 
 *You can try to plot with diffrent metadata.*
 
@@ -861,12 +851,7 @@ ggplot(df) +
            col="red", alpha = .2, stat="identity") 
 ```
 
-<figure>
-<img
-src="https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/reads_count.png"
-alt="density" />
-<figcaption aria-hidden="true">density</figcaption>
-</figure>
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/reads_count.png)
 
 ### Prevalence - Detection
 
@@ -909,12 +894,7 @@ Each point corresponds to a different or unique taxon. The y-axis
 represents the fraction of samples, these taxa are present. The low
 prevalence suggests there is a low overlap across samples.
 
-<figure>
-<img
-src="https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/prevalence.png"
-alt="prevalence" />
-<figcaption aria-hidden="true">prevalence</figcaption>
-</figure>
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/prevalence.png)
 
 **Q: Which taxa is present in all samples and with a high abundance?**
 
@@ -1042,7 +1022,7 @@ ranacapa::ggrare(pseq, step = 10, color = "Sample", se = FALSE) +
     geom_vline(xintercept = min(sample_sums(pseq)), color = "gray60")
 ```
 
-![rare](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/rare.png)
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/rare.png)
 ***Q: What do you observe?***
 
 ### Data Normalization
@@ -1198,12 +1178,7 @@ p <- plot_composition(pseq,
 print(p)
 ```
 
-<figure>
-<img
-src="https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/barplot_family.png"
-alt="barplot" />
-<figcaption aria-hidden="true">barplot</figcaption>
-</figure>
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/barplot_family.png)
 
 **Q: Does the profiles look similar between samples? Can you spot any
 trends?**
@@ -1271,12 +1246,7 @@ p <- plot_composition(pseq,
 print(p)
 ```
 
-<figure>
-<img
-src="https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/barplot_genus.png"
-alt="barplot" />
-<figcaption aria-hidden="true">barplot</figcaption>
-</figure>
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/barplot_genus.png)
 
 ## 6 Diversity
 
@@ -1293,7 +1263,7 @@ diversity (within one metagenome) and β (across metagenomes).
   environment). To measure α-diversity, we use indexes such as
   Shannon’s, Simpson’s, Chao1, etc.
 
-![density_plot](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/diversity1.png)
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/diversity1.png)
 *Alpha diversity is calculated according to fish diversity in a pond.
 Here, alpha diversity is represented in its simplest way: Richness.*
 
@@ -1309,7 +1279,7 @@ but now take Lake B as our reference site. In the end, the β diversity
 between Lake A and Lake B is (3-2) + (3-2) = 2. This process can be
 repeated, taking each pair of lakes as the focused sites.
 
-![density_plot](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/diversity2.png)
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/diversity2.png)
 *Alpha and beta diversity indexes of fishes in a pond.*
 
 - *β* diversity mesures how different two or more communities are,
@@ -1330,12 +1300,7 @@ repeated, taking each pair of lakes as the focused sites.
   plot and show the results of such analysis. Among others, PCA, PCoA,
   or NMDS analysis are widely used.
 
-<figure>
-<img
-src="https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/diversity3.png"
-alt="density_plot" />
-<figcaption aria-hidden="true">density_plot</figcaption>
-</figure>
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/diversity3.png)
 
 **Q: Which of the options below is true for the alpha diversity in lakes
 A, B, and beta diversity between lakes A and B, respectively?**
@@ -1432,12 +1397,7 @@ p.shannon <- boxplot_alpha(pseq,
 p.shannon
 ```
 
-<figure>
-<img
-src="https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/shanon.png"
-alt="shanon" />
-<figcaption aria-hidden="true">shanon</figcaption>
-</figure>
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/shanon.png)
 
 Alternative:
 
@@ -1504,12 +1464,7 @@ Check normality of data: Shapiro Test & QQ-plots. Shapiro: H0 is «data
 follow normal distribution», H1 is «data do not follow normal
 distribution».
 
-<figure>
-<img
-src="https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/shap1.png"
-alt="shap1" />
-<figcaption aria-hidden="true">shap1</figcaption>
-</figure>
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/shap1.png)
 
 Use the custom function indices_normality() (defined in
 HELPER/indices_normality.R) plots the results of Shapiro test as well as
@@ -1527,12 +1482,7 @@ tab |>
   indices_normality(nrow = 2, ncol = 2)
 ```
 
-<figure>
-<img
-src="https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/shap.png"
-alt="shap1" />
-<figcaption aria-hidden="true">shap1</figcaption>
-</figure>
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/shap.png)
 
 ***Q: What are your conclusions?***
 
@@ -1595,7 +1545,7 @@ print(as.data.frame(permanova$aov.tab))
 ```
 
     ##           Df    SumsOfSqs      MeanSqs  F.Model        R2 Pr(>F)
-    ## Time       4 2.011394e+13 5.028484e+12 4.444902 0.4156094 0.0011
+    ## Time       4 2.011394e+13 5.028484e+12 4.444902 0.4156094 0.0016
     ## Residuals 25 2.828231e+13 1.131292e+12       NA 0.5843906     NA
     ## Total     29 4.839624e+13           NA       NA 1.0000000     NA
 
