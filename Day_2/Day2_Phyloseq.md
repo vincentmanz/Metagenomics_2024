@@ -1467,8 +1467,8 @@ distribution».
 ![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/shap1.png)
 
 Use the custom function indices_normality() (defined in
-HELPER/indices_normality.R) plots the results of Shapiro test as well as
-Q-Qplots.
+HELPER/indices_normality.R) plots the results of Shapiro test
+(Theoritical Quantiles) as well as Q-Qplots.
 
 ``` r
 tab <- microbiome::alpha(pseq)

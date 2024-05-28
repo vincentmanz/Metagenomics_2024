@@ -656,6 +656,7 @@ p <- p + rotate_x_text()
 p <- p + rremove("x.text")
 p
 ```
+
 ![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/indices.png)
 
 Each of these metrics can give an insight into the distribution of the OTUs inside our samples. For example, the Chao1 diversity index gives more weight to singletons and doubletons observed in our samples, while Shannon is an entropy index remarking the impossibility of taking two reads out of the metagenome “bag” and that these two will belong to the same OTU.
@@ -670,7 +671,7 @@ Shapiro: H0 is «data follow normal distribution», H1 is «data do not follow n
 
 ![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/shap1.png)
 
-Use the custom function indices_normality() (defined in HELPER/indices_normality.R) plots the results of Shapiro test as well as Q-Qplots.
+Use the custom function indices_normality() (defined in HELPER/indices_normality.R) plots the results of Shapiro test (Theoritical Quantiles) as well as Q-Qplots.
 
 ```{r normalization_shap, eval=FALSE}
 
