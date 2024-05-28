@@ -1,3 +1,9 @@
+---
+title: "Processing data and stats"
+author: "Vincent Manzanilla, INTERTRYP"
+output: github_document
+---
+
 # Day 2
 
 | Time      | Activity                      | Slides                                | Hands-on                                                |

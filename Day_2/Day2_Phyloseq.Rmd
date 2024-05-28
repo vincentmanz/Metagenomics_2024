@@ -208,7 +208,7 @@ HINT
 
 </details> 
 
-Etraction of the sample's names. 
+Extraction of the sample's names. 
 
 ```{r dat5}
 sample_names(merged_metagenomes)
@@ -251,9 +251,7 @@ Now that we know a little bit about our data we can start the pre-processing.
 
 Let us check for distribution of number of sequences retained from the Kraken/Bracken approach.
 
-
-
-```{r plot}
+```{r plot, eval=FALSE}
 plot_read_distribution(merged_metagenomes, "Type", plot.type = "density")
 ```
 ![density](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/density_reads.png)
@@ -263,7 +261,7 @@ plot_read_distribution(merged_metagenomes, "Type", plot.type = "density")
 
 Plotting the read count per sample
 
-```{r plot2}
+```{r plot2, eval=FALSE}
 df <- psmelt(merged_metagenomes)  %>%  group_by(Sample, Time) %>%  
   summarise(sum_reads = sum(Abundance)) %>% arrange(sum_reads) 
 
@@ -285,15 +283,15 @@ Prevalence quantifies the frequency of samples where certain microbes were detec
 The population prevalence (frequency) at a 1% relative abundance threshold (detection = 1/100 and count = false), can look like this.
 
 ```{r pre}
-prevalence(merged_metagenomes, detection=1/100, sort=TRUE, count=FALSE)
+head(prevalence(merged_metagenomes, detection=1/100, sort=TRUE, count=FALSE))
 ```
 
 The function arguments detection and count can also be used to access, how many samples do pass a threshold for raw counts. Here, the population prevalence (frequency) at the absolute abundance threshold (count=true) at read count 1 (detection = 1) is accessed.
 
-```{r pre1}
+```{r pre1, eval=FALSE}
 # Calculate the prevalence of taxa in the phyloseq object 'merged_metagenomes'
 # Detection threshold is set to 1, taxa are sorted by prevalence, and count of taxa is returned
-prevalence(merged_metagenomes, detection = 1, sort = TRUE, count = TRUE)
+head(prevalence(merged_metagenomes, detection = 1, sort = TRUE, count = TRUE))
 
 # Plot the prevalence of taxa at the Phylum level with a detection threshold of 10000
 plot_taxa_prevalence(merged_metagenomes, level = "Phylum", detection = 10000)
@@ -328,8 +326,8 @@ Samples might be contaminated with exogenous sequences. We have observed 1 conta
 
 ```{r psmelt}
 #check 
-psmelt(subset_taxa(merged_metagenomes, Genus == "Trypanosoma"))
-psmelt(subset_taxa(merged_metagenomes, Genus == "Homo"))
+head(psmelt(subset_taxa(merged_metagenomes, Genus == "Trypanosoma")))
+head(psmelt(subset_taxa(merged_metagenomes, Genus == "Homo")))
 
 #Keep only the kingdom of interest
 merged_metagenomes <- subset_taxa(merged_metagenomes, Kingdom %in% c("Archaea", "Bacteria", "Fungi", "Viruses"))
@@ -347,6 +345,24 @@ HINT
 > head(tax_table(merged_metagenomes)) or plot_taxa_prevalence(merged_metagenomes, level="Phylum", detection = 10000)
 
 </details> 
+
+### Run rarefaction curves
+
+Before normalization by sub-sampling, let’s have a look at rarefaction curves, evaluate your sequencing effort and make decisions. 
+Rarefaction is a statistical technique employed to evaluate species richness based on sampling results. The process involved subsampling reads without replacement to a defined sequencing depth, thereby creating a standardized library size across samples. Any sample with a total read count less than the defined sequencing depth used to rarefy will be discarded. What we want to see in those curves is that it reaches a plateau meaning no new OTUs are discovered (going up on the Y axis) as sequencing is deeper (the X axis). If this happens we can be pretty confident that we sequenced all the OTUs that were present in the sample.
+
+```{r rare1, eval=FALSE}
+install.packages("remotes")
+remotes::install_github("gauravsk/ranacapa")
+```
+
+```{r rare2, eval=FALSE}
+ranacapa::ggrare(pseq, step = 10, color = "Sample", se = FALSE) +
+    geom_vline(xintercept = min(sample_sums(pseq)), color = "gray60")
+```
+
+![rare](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/rare.png)
+ ***Q: What do you observe?***
 
 ### Data Normalization
 
@@ -415,7 +431,7 @@ HINT
 
 **Bar plot** are useful to have a broad look at the data. 
 
-```{r plot3}
+```{r plot3, eval=FALSE}
 # Create a plot of the taxonomic composition at the Family level
 p <- plot_composition(pseq,
                       taxonomic.level = "Species", # Specify the taxonomic level for the plot
@@ -465,7 +481,7 @@ HINT
 
 *If you have time you can also visualize the other taxonomic levels (e.g. species) with the same approach. Try to come up with the code yourself.*
 
-```{r plot4}
+```{r plot4, eval=FALSE}
 # Aggregate rare taxa at the Genus level for the phyloseq object 'merged_metagenomes'
 # Taxa are included if they have a detection threshold of 0.05% and a prevalence of 20%
 pseq <- aggregate_rare(merged_metagenomes, level = "Phylum", detection = 0.05/100, prevalence = 20/100)
@@ -583,7 +599,7 @@ tab <- richness(pseq, detection = 1000)
 head(tab)
 ```
 
-```{r shannon}
+```{r shannon, eval=FALSE}
 p.shannon <- boxplot_alpha(pseq, 
                            index = "shannon",
                            x_var = "Type",
@@ -595,7 +611,7 @@ p.shannon
 
 Alternative: 
 
-```{r hmp}
+```{r hmp, eval=FALSE}
 # get the metadata out as seprate object
 hmp.meta <- meta(pseq)
 
@@ -646,18 +662,47 @@ Each of these metrics can give an insight into the distribution of the OTUs insi
 
 **Q: What do you observe?**
 
+####  Normality test: Check the Normal or not normal distribution  
+
+
+Check normality of data: Shapiro Test & QQ-plots. 
+Shapiro: H0 is «data follow normal distribution», H1 is «data do not follow normal distribution». 
+
+![shap1](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/shap1.png)
+Use the custom function indices_normality() (defined in HELPER/indices_normality.R) plots the results of Shapiro test as well as Q-Qplots.
+
+```{r normalization_shap, eval=FALSE}
+
+tab <- microbiome::alpha(pseq)
+
+
+tab |>
+  dplyr::select(observed,
+                diversity_gini_simpson,
+                diversity_shannon,
+                chao1) |>
+  indices_normality(nrow = 2, ncol = 2)
+```
+
+![shap1](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/shap.png)
+
+
+
+***Q: What are your conclusions?***
+
+
+
 
 ### Investigate the top factors
 
 Show coefficients for the top taxa separating the groups
 
-```{r coef1}
+```{r coef1, eval=FALSE}
 pseq <- aggregate_rare(merged_metagenomes, level = "Genus", detection = 0.1/100, prevalence = 50/100)
 pseq <- microbiome::transform(pseq, transform = "compositional")
-abundances(pseq)
+head(abundances(pseq))
 
 p <- plot_landscape(pseq, method = "NMDS", distance = "bray", col = "Time", size = 3)
-print(p)
 ```
 ![association](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/pca.png)
 
@@ -692,7 +737,7 @@ The time variable is significantly associated with microbiota composition (p-val
 Let us visualize the model coefficients for species that exhibit the largest differences between the groups. This gives some insights into how the groups tend to differ from each other in terms of community composition.
 
 
-```{r coef}
+```{r coef, eval=FALSE}
 coef <- coefficients(permanova)["Time1",]
 top.coef <- coef[rev(order(abs(as.numeric(coef))))[1:20]]
 par(mar = c(3, 14, 2, 1))
@@ -783,7 +828,7 @@ merged_data <- dplyr::left_join(meta, nmds_spec_gg, by = "Sample")
 ```
 Then we can create the plot easily and color according to the metadata. We are choosing timepoint and mocktreat for the coloring respectively. But feel free to explore other parameters.
 
-```{r plot5}
+```{r plot5, eval=FALSE}
 ggplot(merged_data, aes(x = MDS1, y = MDS2)) +
     geom_point(aes(color = Time), size = 3, alpha = 0.5) +
     geom_text_repel(aes(label = Type), size = 3, color = "black") +
@@ -793,7 +838,7 @@ ggplot(merged_data, aes(x = MDS1, y = MDS2)) +
 ```
 ![nmds_time](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_time.png)
 
-```{r plot6}
+```{r plot6, eval=FALSE}
 ggplot(merged_data, aes(x = MDS1, y = MDS2)) +
     geom_point(aes(color = Reads), size = 3, alpha = 0.5) +
     geom_text_repel(aes(label = Time), size = 3, color = "black") +
@@ -873,7 +918,7 @@ combined_plot <- wrap_plots(plot_list) +
   plot_layout(guides = "collect")
 
 # Print the combined plot
-print(combined_plot)
+#print(combined_plot)
 ```
 
 ![nmds_type](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_all.png)
@@ -930,7 +975,7 @@ rda_info$permanova
 
 Next, we proceed to visualize the weight and significance of each variable on the similarity between samples with an RDA plot, which can be generated with the plotRDA function from the miaViz package.
 
-```{r plot7}
+```{r plot7, eval=FALSE}
 # Load packages for plotting function
 library(miaViz)
 
