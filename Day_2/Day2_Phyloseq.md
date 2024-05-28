@@ -1509,12 +1509,10 @@ Check normality of data: Shapiro Test & QQ-plots. Shapiro: H0 is «data
 follow normal distribution», H1 is «data do not follow normal
 distribution».
 
-<figure>
-<img
-src="https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/shap1.png"
-alt="norm" />
-<figcaption aria-hidden="true">norm</figcaption>
-</figure>
+![shap1](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/shap1.png)
+Use the custom function indices_normality() (defined in
+HELPER/indices_normality.R) plots the results of Shapiro test as well as
+Q-Qplots.
 
 ``` r
 tab <- microbiome::alpha(pseq)
@@ -1527,6 +1525,13 @@ tab |>
                 chao1) |>
   indices_normality(nrow = 2, ncol = 2)
 ```
+
+<figure>
+<img
+src="https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/shap.png"
+alt="shap1" />
+<figcaption aria-hidden="true">shap1</figcaption>
+</figure>
 
 ***Q: What are your conclusions?***
 
@@ -1589,7 +1594,7 @@ print(as.data.frame(permanova$aov.tab))
 ```
 
     ##           Df    SumsOfSqs      MeanSqs  F.Model        R2 Pr(>F)
-    ## Time       4 2.011394e+13 5.028484e+12 4.444902 0.4156094  0.002
+    ## Time       4 2.011394e+13 5.028484e+12 4.444902 0.4156094 0.0021
     ## Residuals 25 2.828231e+13 1.131292e+12       NA 0.5843906     NA
     ## Total     29 4.839624e+13           NA       NA 1.0000000     NA
 
