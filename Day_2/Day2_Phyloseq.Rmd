@@ -688,11 +688,7 @@ tab |>
 
 ![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/shap.png)
 
-
-
 ***Q: What are your conclusions?***
-
-
 
 
 ### Investigate the top factors
@@ -706,7 +702,8 @@ head(abundances(pseq))
 
 p <- plot_landscape(pseq, method = "NMDS", distance = "bray", col = "Time", size = 3)
 ```
-![association](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/pca.png)
+
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/pca.png)
 
 
 ### Estimating associations with an external variable
@@ -746,7 +743,7 @@ par(mar = c(3, 14, 2, 1))
 barplot(sort(top.coef), horiz = T, las = 1, main = "Top taxa")
 ```
 
-![association](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/associations.png)
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/associations.png)
 
 **Enterococcus** (Bacillota), which plays a crucial role in metabolic adaptability against pathogenic or plant toxins and anti-herbivore defense, was found to be one of the predominant gut microorganism of lepidopteran insects, including B. mori, Helicoverpa zea, and Porthetria dispar (Paniagua Voirol et al., 2018; Zhang et al., 2022). 
 
@@ -838,7 +835,8 @@ ggplot(merged_data, aes(x = MDS1, y = MDS2)) +
     theme_minimal()
 
 ```
-![nmds_time](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_time.png)
+
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_time.png)
 
 ```{r plot6, eval=FALSE}
 ggplot(merged_data, aes(x = MDS1, y = MDS2)) +
@@ -850,7 +848,7 @@ ggplot(merged_data, aes(x = MDS1, y = MDS2)) +
 
 ```
 
-![nmds_type](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_reads.png)
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_reads.png)
 
 A few combinations of beta diversity metrics and assay types are typically used. For instance, Bray-Curtis dissimilarity and Euclidean distance are often applied to the relative abundance and the clr assays, respectively. Besides beta diversity metric and assay type, the PCoA algorithm is also a variable that should be considered. Below, we show how the choice of these three factors can affect the resulting lower-dimensional data.
 
@@ -923,7 +921,7 @@ combined_plot <- wrap_plots(plot_list) +
 #print(combined_plot)
 ```
 
-![nmds_type](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_all.png)
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_all.png)
 
 
 #### Unsupervised ordination
@@ -985,7 +983,7 @@ library(miaViz)
 plotRDA(pseq, "RDA", colour_by = "Time")
 ```
 
-![nmds_type](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/dbrda_plot.png)
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/dbrda_plot.png)
 
 
 ### Confounding effects

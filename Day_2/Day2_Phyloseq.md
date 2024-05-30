@@ -1498,12 +1498,7 @@ head(abundances(pseq))
 p <- plot_landscape(pseq, method = "NMDS", distance = "bray", col = "Time", size = 3)
 ```
 
-<figure>
-<img
-src="https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/pca.png"
-alt="association" />
-<figcaption aria-hidden="true">association</figcaption>
-</figure>
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/pca.png)
 
 ### Estimating associations with an external variable
 
@@ -1545,7 +1540,7 @@ print(as.data.frame(permanova$aov.tab))
 ```
 
     ##           Df    SumsOfSqs      MeanSqs  F.Model        R2 Pr(>F)
-    ## Time       4 2.011394e+13 5.028484e+12 4.444902 0.4156094 0.0015
+    ## Time       4 2.011394e+13 5.028484e+12 4.444902 0.4156094 0.0017
     ## Residuals 25 2.828231e+13 1.131292e+12       NA 0.5843906     NA
     ## Total     29 4.839624e+13           NA       NA 1.0000000     NA
 
@@ -1564,12 +1559,7 @@ par(mar = c(3, 14, 2, 1))
 barplot(sort(top.coef), horiz = T, las = 1, main = "Top taxa")
 ```
 
-<figure>
-<img
-src="https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/associations.png"
-alt="association" />
-<figcaption aria-hidden="true">association</figcaption>
-</figure>
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/associations.png)
 
 **Enterococcus** (Bacillota), which plays a crucial role in metabolic
 adaptability against pathogenic or plant toxins and anti-herbivore
@@ -1794,12 +1784,7 @@ ggplot(merged_data, aes(x = MDS1, y = MDS2)) +
     theme_minimal()
 ```
 
-<figure>
-<img
-src="https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_time.png"
-alt="nmds_time" />
-<figcaption aria-hidden="true">nmds_time</figcaption>
-</figure>
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_time.png)
 
 ``` r
 ggplot(merged_data, aes(x = MDS1, y = MDS2)) +
@@ -1810,12 +1795,7 @@ ggplot(merged_data, aes(x = MDS1, y = MDS2)) +
     theme_minimal()
 ```
 
-<figure>
-<img
-src="https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_reads.png"
-alt="nmds_type" />
-<figcaption aria-hidden="true">nmds_type</figcaption>
-</figure>
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_reads.png)
 
 A few combinations of beta diversity metrics and assay types are
 typically used. For instance, Bray-Curtis dissimilarity and Euclidean
@@ -2038,12 +2018,7 @@ combined_plot <- wrap_plots(plot_list) +
 #print(combined_plot)
 ```
 
-<figure>
-<img
-src="https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_all.png"
-alt="nmds_type" />
-<figcaption aria-hidden="true">nmds_type</figcaption>
-</figure>
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_all.png)
 
 #### Unsupervised ordination
 
@@ -2127,12 +2102,7 @@ library(miaViz)
 plotRDA(pseq, "RDA", colour_by = "Time")
 ```
 
-<figure>
-<img
-src="https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/dbrda_plot.png"
-alt="nmds_type" />
-<figcaption aria-hidden="true">nmds_type</figcaption>
-</figure>
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/dbrda_plot.png)
 
 ### Confounding effects
 
