@@ -698,7 +698,7 @@ tab |>
 ### Investigate the top factors
 
 Show coefficients for the top taxa separating the groups
-
+ 
 ```{r coef1, eval=FALSE}
 pseq <- aggregate_rare(merged_metagenomes, level = "Genus", detection = 0.1/100, prevalence = 50/100)
 pseq <- microbiome::transform(pseq, transform = "compositional")
