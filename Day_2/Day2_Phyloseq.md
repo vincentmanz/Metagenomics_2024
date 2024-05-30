@@ -1545,7 +1545,7 @@ print(as.data.frame(permanova$aov.tab))
 ```
 
     ##           Df    SumsOfSqs      MeanSqs  F.Model        R2 Pr(>F)
-    ## Time       4 2.011394e+13 5.028484e+12 4.444902 0.4156094 0.0023
+    ## Time       4 2.011394e+13 5.028484e+12 4.444902 0.4156094 0.0015
     ## Residuals 25 2.828231e+13 1.131292e+12       NA 0.5843906     NA
     ## Total     29 4.839624e+13           NA       NA 1.0000000     NA
 
