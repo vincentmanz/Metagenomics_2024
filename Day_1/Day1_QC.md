@@ -1,5 +1,5 @@
 
-# Data and QC
+# Data set, QC and host removal
 
 We are going to use the data from the following article: 
 
