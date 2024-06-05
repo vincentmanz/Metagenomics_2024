@@ -440,10 +440,11 @@ The useful command to manage data frame : 1) select() to select vector or variab
 ```{r dplyr1}
 library(dplyr)
 
-iris %>%
+df1 <- iris %>%
   filter(Sepal.Length > 6) %>% # filtered using size of Sepal Length
   filter(Species == "versicolor") # and the species
-
+nrow(df1)
+dim(df1)
 ```
 
 ```{r dplyr app}
@@ -490,7 +491,8 @@ The main parameter are :
 - **dec** : the character used in the file for decimal points.
 
 ```{r readt}
-ds <- read.table(file="../DATA/example_read.txt", sep = ";", header = TRUE)
+ds <- read.table(file="../DATA/tryp_metadata.csv", sep = ",", header = TRUE)
+ds
 ```
 
 
@@ -569,10 +571,11 @@ g1 <- ggplot(data = iris, aes(Species, Sepal.Length)) + #  what I want to repres
   geom_boxplot(aes(color = Species, fill = Species), alpha = 0.4) +# how I represent it. Here I changed geometry using boxplot.
   labs(x = "Species", y = "Sepal.Length (mm)") +
   theme_minimal()
+g1
 ```
 
 ```{r ggplot5}
-pdf("pictures/yourfile.pdf")
+pdf("yourfile.pdf")
 g1
 dev.off()
 ```
@@ -580,5 +583,5 @@ dev.off()
 or `ggplot2::ggsave()`
 
 ```{r ggplot6}
-ggsave("pictures/yourfile2.png", g1)
+ggsave("~/yourfile2.png", g1)
 ```

@@ -42,7 +42,7 @@ mkdir READBASED
 for i in {518..547}
 do
     echo "Mapping: SRR15276"$i""
-    kraken2 --db READBASED/k2_pluspfp_16gb_20240112/ --threads 60  --output READBASED/SRR15276"$i".kraken.out --report READBASED/SRR15276"$i".kraken_report.out --paired TRIMMEDDATA/SRR15276"$i".R1.fastq.gz TRIMMEDDATA/SRR15276"$i".R2.fastq.gz
+    kraken2 --db READBASED1/k2_pluspfp_16gb_20240112/ --threads 60  --output READBASED1/SRR15276"$i".kraken.out --report READBASED1/SRR15276"$i".kraken_report.out --paired TRIMMEDDATA/SRR15276"$i".R1.fastq.gz TRIMMEDDATA/SRR15276"$i".R2.fastq.gz
 done
 ```
 This produces a count table:

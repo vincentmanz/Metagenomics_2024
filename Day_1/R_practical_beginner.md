@@ -31,7 +31,7 @@ getwd()
 **To change my working directory from the console**
 
 ``` r
-setwd("/path/to/my/fancy/project/")
+setwd("~/M")
 ```
 
 In Rstudio, we can change the working directory by navigating in folder
@@ -198,7 +198,7 @@ numeric, characters…)
 V1 <- c(2, 6, 9) # numeric vector
 V2 <- c("monday", "Tuesday", "Wednesday") # character vector
 V3 <- rep(6, 3) # repetition of the same value
-V4 <- seq(1, 3, 0.1)# sequence of number
+V4 <- seq(1, 3, 0.1) # sequence of number
 V5 <- 1:100
 V5
 ```
@@ -549,17 +549,16 @@ apply(df[, 2:3], 2, mean)
 **From data set iris in package **datasets\*\* Load package datasets and
 load data set iris using `data()`
 
-1.  Give the class Sepal.Width and Species vectors
-2.  What is the minimum / maximum / average sepal length of these
-    irises?
-3.  What are the values of the first 10 irises?
-4.  Calculate standard deviation for every numeric vector (function :
-    `sd()`)
-5.  Calculate mean for every numeric vector
-6.  Create a data frame with mean and sd as line and give a name for
-    each line
-7.  An error of 0.5cm was made in the measurement of the length of the
-    sepal of the 41st iris: add 0.5cm to this measurement
+1.  Give the class Sepal.Width and Species vectors (get the vector "$")
+```{r}
+
+```
+2.  What is the minimum / maximum / average sepal length of these irises (vector with max() )?
+3.  What are the values of the first 10 irises (?head)?
+4.  Calculate standard deviation for every numeric vector (function : `sd()`)
+5.  Calculate mean for every numeric vector (apply)
+6.  Create a data frame with mean and sd as line and give a name for each line (rbind)
+7.  An error of 0.5cm was made in the measurement of the length of the sepal of the 41st iris: add 0.5cm to this measurement 
 
 ### Use dplyr to select, filter a data frame
 
