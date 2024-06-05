@@ -87,7 +87,14 @@ What Kraken2 has produced is the classification of each read to a taxonomic rank
 
 [Bracken](https://github.com/jenniferlu717/Bracken) takes the output from Kraken and estimate the abundance at user specified level: species, genus, or phylum.
 
-Run the script for 3 levels one with species, Genus and Families.
+Install bracken
+
+```bash
+git clone https://github.com/jenniferlu717/Bracken.git
+cd Bracken
+bash install_bracken.sh
+cd ../
+```
 
 
 ```bash
@@ -96,7 +103,7 @@ mkdir READBASED/BRACKEN
 
 for i in {518..547}
 do
-    bracken -d READBASED/k2_pluspfp_16gb_20240112/ -t 10 -i READBASED/SRR15276"$i".kraken_report.out -o READBASED/BRACKEN/SRR15276"$i"_species.bracken 
+    Bracken/bracken -d READBASED/k2_pluspfp_16gb_20240112/ -t 10 -i READBASED/SRR15276"$i".kraken_report.out -o READBASED/BRACKEN/SRR15276"$i"_species.bracken 
 done
 ```
 
