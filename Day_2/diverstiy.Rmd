@@ -1,0 +1,711 @@
+---
+title: "Diversity indices"
+author: "Vincent Manzanilla, INTERTRYP"
+output: github_document
+---
+
+# Diversity
+
+Species diversity, in its simplest definition, is the number of species in a particular area and their relative abundance (evenness). Once we know the taxonomic composition of our metagenomes, we can do diversity analyses. Here we will discuss the two most used diversity metrics, α diversity (within one metagenome) and β (across metagenomes).
+
+- *α* Diversity: Can be represented only as richness (, i.e., the number of different species in an environment), or it can be measured considering the abundance of the species in the environment as well (i.e., the number of individuals of each species inside the environment). To measure α-diversity, we use indexes such as Shannon’s, Simpson’s, Chao1, etc.
+
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/diversity1.png)
+*Alpha diversity is calculated according to fish diversity in a pond. Here, alpha diversity is represented in its simplest way: Richness.*
+
+In the next example, we will look at the α and the β components of the diversity of a dataset of fishes in three lakes. The most simple way to calculate the β-diversity is to calculate the distinct species between two lakes (sites). Let us take as an example the diversity between Lake A and Lake B. The number of species in Lake A is 3. To this quantity, we will subtract the number of these species that are shared with the Lake B: 2. So the number of unique species in Lake A compared to Lake B is (3-2) = 1. To this number, we will sum the result of the same operations but now take Lake B as our reference site. In the end, the β diversity between Lake A and Lake B is (3-2) + (3-2) = 2. This process can be repeated, taking each pair of lakes as the focused sites.
+
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/diversity2.png)
+*Alpha and beta diversity indexes of fishes in a pond.*
+
+- *β* diversity mesures how different two or more communities are, either in their composition (richness) or in the abundance of the organisms that compose it (abundance).
+
+- *Bray-Curtis dissimilarity*: The difference in richness and abundance across environments (samples). Weight on abundance. Measures the differences from 0 (equal communities) to 1 (different communities)
+- *Jaccard distance*: Based on the presence/absence of species (diversity). It goes from 0 (same species in the community) to 1 (no species in common)
+- *UniFrac*: Measures the phylogenetic distance; how alike the trees in each community are. There are two types, without weights (diversity) and with weights (diversity and abundance)
+There are different ways to plot and show the results of such analysis. Among others, PCA, PCoA, or NMDS analysis are widely used.
+
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/diversity3.png)
+
+**Q: Which of the options below is true for the alpha diversity in lakes A, B, and beta diversity between lakes A and B, respectively?**
+
+- 4, 3, 1
+- 4, 3, 5
+- 9, 7, 16
+
+
+<details>
+<summary>
+HINT
+</summary>
+
+> 4, 3, 5 Alpha diversity in this case, is the sum of different species. Lake A has 4 different species and lake B has 3 different species. Beta diversity refers to the difference between lake A and lake B. If we use the formula in Figure 2 we can see that to calculate beta diversity, we have to detect the number of species and the number of shared species in both lakes. There is only one shared species, so we have to subtract the number of shared species to the total species and sum the result. In this case, in lake A, we have 4 different species and one shared species with lake B (4-1)=3, and in lake B we have three species and one shared species with lake A (3-1)=2. If we add 3+2, the result is 5.
+
+</details>  
+
+
+## 1 Alpha diversity
+
+A comprehensive list of global indicators of the ecosystem state can be obtained as follows. This includes various measures of richness, evenness, diversity, dominance, and rarity with default parameters. See the individual functions for more options regarding parameter tuning.
+```{r lib}
+library(dplyr)
+library(tibble)
+library(microbiome)
+library(vegan)
+library(FSA)
+library(SingleCellExperiment)
+library(ggrepel)
+library(patchwork)
+```
+
+```{r data}
+setwd("~/Metagenomics_2024/Day_2/")
+merged_metagenomes <- phyloseq::import_biom("../DATA//merge_species.biom") 
+meta <- read.csv(file = "../DATA/tryp_metadata.csv", sep = ",")
+
+# Sort the 'meta' data frame by the 'SRA.identifier' column
+meta <- meta %>% arrange(row_number(SRA.identifier))
+
+# Associate the sorted metadata to the phyloseq object as sample data
+merged_metagenomes@sam_data <- sample_data(meta)
+
+# Extract the sample names from the 'meta' data frame
+column_name <- meta %>% pull(Sample)
+
+# Associate the extracted sample names to the phyloseq object
+sample_names(merged_metagenomes) <- column_name
+
+# Remove the unnecessary 'k_' prefix in the taxonomy data
+merged_metagenomes@tax_table@.Data <- substring(merged_metagenomes@tax_table@.Data, 4)
+
+# Rename the columns of the taxonomy table to represent taxonomic ranks
+colnames(merged_metagenomes@tax_table@.Data) <- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
+
+#Keep only the kingdom of interest
+merged_metagenomes <- subset_taxa(merged_metagenomes, Kingdom %in% c("Archaea", "Bacteria", "Fungi", "Viruses"))
+head(sample_data(merged_metagenomes))
+head(tax_table(merged_metagenomes))
+```
+
+
+```{r tab}
+# Aggregate rare taxa at the Species level for the phyloseq object 'merged_metagenomes'
+# Taxa are included if they have a detection threshold of 0.05% and a prevalence of 20%
+pseq <- microbiome::aggregate_rare(merged_metagenomes, level = "Species", detection = 0.05/100, prevalence = 20/100)
+
+# Calculate the Shannon diversity index for the aggregated phyloseq object 'pseq'
+# The Shannon index measures the diversity within a sample, considering both richness and evenness
+tab <- microbiome::alpha(pseq, index = 'shannon')
+
+# Display the first few rows of the calculated Shannon diversity index table
+head(tab)
+```
+This returns observed richness with given detection threshold(s).
+
+```{r rich}
+# Calculate the richness of the phyloseq object 'pseq' with a detection threshold of 1000
+# Richness is a measure of the number of different taxa present in a sample
+tab <- richness(pseq, detection = 1000)
+
+# Display the first few rows of the calculated richness table
+head(tab)
+```
+
+```{r shannon, eval=FALSE}
+p.shannon <- boxplot_alpha(pseq, 
+                           index = "shannon",
+                           x_var = "Type",
+                          fill.colors = c(Control="cyan4", T._cruzi="deeppink4",T._rangeli="darkorange1" ))
+p.shannon
+```
+
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/shanon.png)
+
+Alternative: 
+
+```{r hmp, eval=FALSE}
+# get the metadata out as seprate object
+hmp.meta <- meta(pseq)
+
+# Add the rownames as a new colum for easy integration later.
+hmp.meta$sam_name <- (hmp.meta$Type)
+
+hmp.div <- microbiome::alpha(pseq)
+# Add the rownames to diversity table
+hmp.div$Sample <- rownames(hmp.div)
+
+# merge these two data frames into one
+div.df <- merge(hmp.div,hmp.meta, by = "Sample")
+
+# check the tables
+colnames(div.df)
+
+div.df2 <- div.df[, c("sam_name", "diversity_inverse_simpson", "diversity_gini_simpson", "diversity_shannon", "diversity_fisher", "chao1")]
+
+# the names are not pretty. we can replace them
+
+colnames(div.df2) <- c("Type", "Inverse Simpson", "Gini-Simpson", "Shannon", "Fisher", "Chao1")
+
+# check
+colnames(div.df2)
+div_df_melt <- reshape2::melt(div.df2)
+## Using Location as id variables
+
+head(div_df_melt)
+
+library(ggpubr)
+# Now use this data frame to plot 
+p <- ggboxplot(div_df_melt, x = "Type", y = "value",
+               fill = "Type", 
+               palette = "jco", 
+               legend= "right",
+               facet.by = "variable", 
+               scales = "free")
+
+p <- p + rotate_x_text() 
+# we will remove the x axis lables
+
+p <- p + rremove("x.text")
+p
+```
+
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/indices.png)
+
+Each of these metrics can give an insight into the distribution of the OTUs inside our samples. For example, the Chao1 diversity index gives more weight to singletons and doubletons observed in our samples, while Shannon is an entropy index remarking the impossibility of taking two reads out of the metagenome “bag” and that these two will belong to the same OTU.
+
+**Q: What do you observe?**
+
+###  1.1 Statistical hypothesis for alpha diversity
+
+#### 1.1.1 Normality test: Check the Normal or not normal distribution  
+
+
+Check normality of data: Shapiro Test & QQ-plots. 
+Shapiro: H0 is «data follow normal distribution», H1 is «data do not follow normal distribution». 
+
+
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/shap1.png)
+
+Use the custom function indices_normality() (defined in HELPER/indices_normality.R) plots the results of Shapiro test (Theoritical Quantiles) as well as Q-Qplots.
+Means if p < 0.05 -> reject the H0 (so does not follow a normal distribution)
+
+```{r normalization_shap, eval=FALSE}
+
+tab <- microbiome::alpha(pseq)
+
+
+tab |>
+  dplyr::select(observed,
+                diversity_gini_simpson,
+                diversity_shannon,
+                chao1) |>
+  indices_normality(nrow = 2, ncol = 2)
+```
+
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/shap.png)
+
+***Q: What are your conclusions?***
+
+
+#### 1.1.2 Parametric (follows normal distribution) AND at least 3 groups - ANOVA test
+
+**Q: How many groups used? See the column "Type" of metadata? or Other variables?**
+
+
+<details>
+<summary>
+HINT
+</summary>
+
+> factor(meta$Type)
+
+</details>  
+
+
+You can use the ANOVA test to compare the means of the alpha diversity indexes between the three groups.
+
+```{r parametric_anova}
+tab <- microbiome::alpha(pseq)
+metadata <- data.frame(sample_data(pseq))
+
+aov_observed <- stats::aov(tab$diversity_shannon ~ Type, metadata)
+summary(aov_observed)
+```
+
+ You are comparing the effect of 3 types of experiments. 
+
+**Q: What are your conclusions? What is the p-value?**
+
+It does not tell you which pair of groups are significantly differents!!!!
+
+Post-hoc test: Tukey multiple pairwise-comparisons
+
+```{r pval}
+signif_pairgroups <- stats::TukeyHSD(aov_observed, method = "bh")
+#plot(stats::TukeyHSD(aov_observed, method = "bh"))
+signif_pairgroups
+```
+
+**Q: What are your conclusions?**
+
+
+
+#### 1.1.3 Parametric (follows normal distribution) AND 2 groups - T-test
+
+```{r parametric_ttest}
+observed_ttest <- stats::t.test(tab$diversity_shannon ~ Gut, data = metadata)
+observed_ttest
+```
+
+**Q: What are your conclusions?**
+
+#### 1.1.4 Non-parametric (do not follows normal distribution) AND at least 3 groups - Kruskal-Wallis
+
+```{r nonparametric_kruskal1}
+stats::kruskal.test(tab$diversity_shannon ~ Time, data = metadata)
+```
+
+
+Post hoc test: Dunn test (pairwise group test)
+```{r nonparametric_kruskal2}
+#install.packages("FSA")
+signifgroup <- FSA::dunnTest(tab$diversity_shannon ~ Time,
+                           data = metadata,
+                           method = "bh")
+signifgroup
+```
+
+#### 1.1.5 Non-parametric (do not follows normal distribution) AND 2 groups - Wilcoxon rank sum
+
+```{r nonparametric_wilcoxon}
+tab_merged <- merge(rownames_to_column(tab, var = "Sample"), metadata)
+
+pairwise_test <- ggpubr::compare_means( diversity_shannon ~ Gut,
+                                        tab_merged,
+                                       method = "wilcox.test")
+pairwise_test
+```
+
+*ns= non-significant, *=p<0.05, **=p<0.01,  ***=p<0.001, ****=p<0.0001* 
+
+**Q: What are your conclusions?**
+
+Boxplot representation of the data
+
+
+```{r boxplot, eval=FALSE}
+
+graph_shan <- ggplot(metadata, aes(x = Gut, y = tab$diversity_shannon)) + 
+  geom_boxplot(alpha = 0.6, fill = c("#E7B800", "#00AFBB")) +
+  geom_jitter(aes(colour = Gut), 
+              position = position_jitter(0.02), 
+              cex = 2.2) +
+  scale_colour_manual(values = c("#a39715", "#04676e")) + # Manually set the colors
+  stat_summary(fun = mean, geom = "point", shape = 17, size = 3, color = "white") +
+  theme_minimal() 
+
+# Add p-value on graph
+graph_shan + ggpubr::stat_pvalue_manual(
+  pairwise_test,
+  y.position = 3.5,
+  label = "p.adj = {p.adj}",
+  color = "blue",
+  linetype = 1,
+  tip.length = 0.01
+)
+```
+
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/plot_wilco.png)
+
+Alternative to plot the indexes: 
+
+```{r index1}
+plot_richness(merged_metagenomes, measures=c("Chao1", "Simpson"), color="Gut")
+```
+
+### 1.2 Linear regression
+
+Determination coefficient R2 provides percentage variation in y which is explained by all the x together. Its value is (usually) between 0 and 1 and it indicates strength of Linear Regression model. Higher the R2 value, data points are less scattered so it is a good model. Lesser the R2 value is more scattered the data points.
+
+```{r reg, eval=FALSE}
+ggplot(tab_merged, aes(x = Number.of.days, y = chao1)) +
+  geom_point() +
+  stat_smooth(method = "lm", col = "red") +
+  ggpmisc::stat_poly_eq(aes(label = paste(after_stat(rr.label),
+                                          after_stat(p.value.label),
+                                          sep = "*\", \"*"))) +
+  theme_minimal()
+```
+
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/chao.png)
+
+
+**Q: try to interpret the results and re-run the regression for observed or shannon instead of chao1**
+
+As a reminder, shannon measures the diversity within a sample, considering both richness and evenness. Chao1 is a measure of the total number of species in a sample, and it is based on the number of rare species in the sample.
+
+
+## 2 Beta diversity
+
+Beta diversity quantifies the dissimilarity between communities (multiple samples), as opposed to alpha diversity which focuses on variation within a community (one sample). In microbiome research, commonly used metrics of beta diversity include the Bray-Curtis index (for compositional data), Jaccard index (for presence/absence data, ignoring abundance information), Aitchison distance (Euclidean distance for clr transformed abundances, aiming to avoid the compositionality bias), and the Unifrac distance (that takes into account the phylogenetic tree information). Notably, only some of these measures are actual distances, as this is a mathematical concept whose definition is not satisfied by certain ecological measure, such as the Bray-Curtis index. Therefore, the terms dissimilarity and beta diversity are preferred.
+
+| Method description             | Assay type          | Beta diversity metric |
+|--------------------------------|---------------------|-----------------------|
+| Quantitative profiling         | Absolute counts     | Bray-Curtis           |
+| Relative profiling             | Relative abundances | Bray-Curtis           |
+| Aitchison distance             | Absolute counts     | Aitchison             |
+| Aitchison distance             | clr                 | Euclidean             |
+| Robust Aitchison distance      | rclr                | Euclidean             |
+| Presence/Absence similarity    | Relative abundances | Jaccard               |
+| Presence/Absence similarity    | Absolute counts     | Jaccard               |
+| Phylogenetic distance          | Rarefied counts     | Unifrac               |
+
+In practice, beta diversity is usually represented as a *dist* object, a triangular matrix where the distance between each pair of samples is encoded by a specific cell. This distance matrix can then undergo ordination, which is an important ecological tool to reduce the dimensionality of data for a more efficient analysis and visualization. Ordination techniques aim to capture as much essential information from the data as possible and turn it into a lower dimensional representation. Dimension reduction is bound to lose information but commonly used ordination techniques can preserve relevant information of sample similarities in an optimal way, which is defined in different ways by different methods.
+
+Based on the type of algorithm, ordination methods in microbiome research can be generally divided in two categories: unsupervised and supervised ordination. The former includes Principal Coordinate Analysis (PCoA), Principal Component Analysis (PCA) and Uniform Manifold Approximation and Projection for Dimension Reduction (UMAP), whereas the latter is mainly represented by distance-based Redundancy Analysis (dbRDA). We will first discuss unsupervised ordination methods and then proceed to supervised ones.
+
+
+### 2.1 Unsupervised ordination
+
+Unsupervised ordination methods variation in the data without additional information on covariates or other supervision of the model. Among the different approaches, Multi-Dimensional Scaling (MDS) and non-metric MDS (NMDS) can be regarded as the standard. They are jointly referred to as PCoA. 
+
+A typical comparison of community compositions starts with a visual representation of the groups by a 2D ordination. Then we estimate relative abundances and MDS ordination based on Bray-Curtis index between the groups, and visualize the results.
+
+```{r unsup}
+# To ensure reproducibility we can fix the seed here. This will ensure you always get the same result each time you run your data.
+set.seed(34521)
+
+pseq <- aggregate_rare(merged_metagenomes, level = "Genus", detection = 0.1/100, prevalence = 50/100)
+pseq <- microbiome::transform(pseq, transform = "compositional")
+# abundances(pseq)
+pseq  <- abundances(pseq) %>% as.data.frame() 
+pseq <- pseq <- pseq[order(rowSums(pseq), decreasing = TRUE), ] %>% t()
+
+# Calculate distance matrix
+species_frac_filtered_dist <- vegdist(pseq, method = "bray")
+
+# Perform NMDS on distance matrix
+nmds_spec <- metaMDS(species_frac_filtered_dist, distance = "bray",k = 2)
+```
+
+Check the output. 
+
+```{r check}
+# Check the output
+nmds_spec
+```
+Here you see a kind of summary of the analysis. For example, you can see that you used 2 dimensions and the stress was approx. 0.03. In general if a stress is above 0.2 then the clustering is not reliably representing the data and should be interpreted with caution. But here the stress is below 0.2, so we are okay.
+
+Now let’s look at the ordination. To plot the data with ggplot, we need to extract the coordinaties of each point from nmds_spec$points.
+
+```{r extract}
+# Extract and reshape the data to plot ordination as ggplot  and add the metadata
+# Convert the NMDS points to a data frame
+nmds_spec_gg <- as.data.frame(nmds_spec$points)
+
+# Add the "Sample" column based on row names
+nmds_spec_gg <- nmds_spec_gg %>% rownames_to_column("Sample")
+
+# Merge the NMDS data with the metadata by the "Sample" column
+merged_data <- dplyr::left_join(meta, nmds_spec_gg, by = "Sample")
+```
+Then we can create the plot easily and color according to the metadata. We are choosing timepoint and mocktreat for the coloring respectively. But feel free to explore other parameters.
+
+```{r plot5, eval=FALSE}
+ggplot(merged_data, aes(x = MDS1, y = MDS2)) +
+    geom_point(aes(color = Time), size = 3, alpha = 0.5) +
+    geom_text_repel(aes(label = Type), size = 3, color = "black") +
+    ggtitle("NMDS colored according to Time") +
+    theme_minimal()
+
+```
+
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_time.png)
+
+```{r plot6, eval=FALSE}
+ggplot(merged_data, aes(x = MDS1, y = MDS2)) +
+    geom_point(aes(color = Reads), size = 3, alpha = 0.5) +
+    geom_text_repel(aes(label = Time), size = 3, color = "black") +
+    scale_color_continuous(name = "Reads") +  # Add a continuous color scale
+    ggtitle("NMDS colored according to Reads numbers") +
+    theme_minimal()
+
+```
+
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_reads.png)
+
+A few combinations of beta diversity metrics and assay types are typically used. For instance, Bray-Curtis dissimilarity and Euclidean distance are often applied to the relative abundance and the clr assays, respectively. Besides beta diversity metric and assay type, the PCoA algorithm is also a variable that should be considered. Below, we show how the choice of these three factors can affect the resulting lower-dimensional data.
+
+```{r nmds}
+# Run NMDS on relabundance assay with Bray-Curtis distances
+pseq <- aggregate_rare(merged_metagenomes, level = "Genus", detection = 0.1/100, prevalence = 50/100)
+pseq <- microbiome::transform(pseq, transform = "compositional")
+# abundances(pseq)
+pseq  <- abundances(pseq) %>% as.data.frame() 
+pseq <- pseq <- pseq[order(rowSums(pseq), decreasing = TRUE), ] %>% t()
+# Calculate distance matrix
+species_frac_filtered_dist_bray <- vegdist(pseq, method = "bray")
+# Perform NMDS on distance matrix
+nmds_spec_comp_bray <- metaMDS(species_frac_filtered_dist_bray,distance = "bray",k = 2)
+
+# Run NMDS on compositional assay with Euclidean distances
+# Calculate distance matrix
+species_frac_filtered_dist_euclidean <- vegdist(pseq, method = "euclidean")
+# Perform NMDS on distance matrix
+nmds_spec_comp_euclidean <- metaMDS(species_frac_filtered_dist_euclidean,distance = "euclidean",k = 2)
+
+# Run NMDS on compositional assay with Aitchison distances
+# Calculate distance matrix
+species_frac_filtered_dist_aitchison <- vegdist(pseq, method = "robust.aitchison")
+# Perform NMDS on distance matrix
+nmds_spec_comp_aitchison <- metaMDS(species_frac_filtered_dist_aitchison,distance = "robust.aitchison",k = 2)
+
+# Run NMDS on clr assay with Euclidean distances
+pseq <- aggregate_rare(merged_metagenomes, level = "Genus", detection = 0.1/100, prevalence = 50/100)
+pseq <- microbiome::transform(pseq, transform = "clr")
+pseq  <- abundances(pseq) %>% as.data.frame() 
+pseq <- pseq <- pseq[order(rowSums(pseq), decreasing = TRUE), ] %>% t()
+# Calculate distance matrix
+species_frac_filtered_dist_euclidean <- vegdist(pseq, method = "euclidean")
+# Perform NMDS on distance matrix
+nmds_spec_clr_euclidean <- metaMDS(species_frac_filtered_dist_euclidean,distance = "euclidean",k = 2)
+
+# List of NMDS objects and their corresponding titles
+nmds_list <- list(
+  list(data = nmds_spec_comp_bray, title = "Comp Bray"),
+  list(data = nmds_spec_comp_euclidean, title = "Comp Euclidean"),
+  list(data = nmds_spec_comp_aitchison, title = "Comp Aitchison"),
+  list(data = nmds_spec_clr_euclidean, title = "Clr Euclidean")
+)
+
+# Initialize an empty list to store plots
+plot_list <- list()
+
+# Loop through each NMDS object and generate the corresponding plot
+for (nmds_item in nmds_list) {
+  nmds_spec_gg <- as.data.frame(nmds_item$data$points) %>%
+    rownames_to_column("Sample") %>%
+    dplyr::left_join(meta, by = "Sample")
+  
+  plot <- ggplot(nmds_spec_gg, aes(x = MDS1, y = MDS2)) +
+    geom_point(aes(color = Time), size = 3, alpha = 0.5) +
+    geom_text_repel(aes(label = Type), size = 3, color = "black") +
+    ggtitle(paste("NMDS colored according to Time -", nmds_item$title)) +
+    theme_minimal()
+  
+  # Add the plot to the plot list
+  plot_list[[nmds_item$title]] <- plot
+}
+
+# Combine all plots using patchwork
+combined_plot <- wrap_plots(plot_list) +
+  plot_layout(guides = "collect")
+
+# Print the combined plot
+#print(combined_plot)
+```
+
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_all.png)
+
+
+### 2.2 Supervised ordination
+
+dbRDA is a supervised counterpart of PCoA. It maximize the variance with respect to the covariates provided by the user. This can be used to quantify associations between each covariate and community composition (beta diversity). The table below summarizes the relations between the supervised and unsupervised ordination methods.
+
+| Supervised ordination  | Unsupervised ordination          |
+|------------------------|----------------------------------|
+| Euclidean distance     | RDA                              | PCA                         |
+| Non-Euclidean distance | dbRDA                            | PCoA/MDS, NMDS, UMAP        |
+
+
+In summary, the dbRDA is the more general method that allows a wider variety dissimilarity, or beta diversity, indices. 
+
+Let's use the package mia for this analysis, fist we transform our phyloseq object into a mia compatible object. The colData lists the covariates such as Gut and Type...
+
+```{r mia}
+pseq <-  mia::makeTreeSummarizedExperimentFromPhyloseq(merged_metagenomes)
+
+# Apply relative transform
+pseq <- mia::transformAssay(pseq,
+                       method = "relabundance")
+```
+
+dbRDA can be perfomed with the runRDA function. In addition to the arguments previously defined for unsupervised ordination, this function takes a formula to control for variables and an action to treat missing values. Along with metadata, which is the main outcome,we can treat observations missing values (not the case here). 
+
+```{r mia1}
+pseq <- mia::runRDA(pseq,
+               assay.type = "relabundance",
+               formula = assay ~ Gut + Time + Type + Reads,
+               distance = "bray",
+               na.action = na.exclude)
+```
+
+The importance of each variable on the similarity between samples can be assessed from the results of PERMANOVA, automatically provided by the runRDA function. We see that Time explain more than 42% of the variance and it is also significant.
+
+```{r rda}
+# Store results of PERMANOVA test
+rda_info <- attr(reducedDim(pseq, "RDA"), "significance")
+rda_info$permanova
+```
+
+|          | Df | SumOfSqs |         F |  Pr(>F) | Total variance | Explained variance |
+|----------|----|----------|-----------|---------|----------------|-------------------|
+| Model    |  8 | 2.989475 | 13.067070 |   0.001 |       3.590021 |         0.832718  |
+| Gut      |  1 | 0.038869 |  1.359164 |   0.237 |       3.590021 |         0.010827  |
+| Time     |  4 | 1.512583 | 13.223075 |   0.001 |       3.590021 |         0.421330  |
+| Type     |  2 | 0.053880 |  0.942050 |   0.405 |       3.590021 |         0.015008  |
+| Reads    |  1 | 0.052313 |  1.829298 |   0.163 |       3.590021 |         0.014572  |
+| Residual | 21 | 0.600546 |     NA    |     NA  |       3.590021 |         0.167282  |
+
+
+Next, we proceed to visualize the weight and significance of each variable on the similarity between samples with an RDA plot, which can be generated with the plotRDA function from the miaViz package.
+
+```{r plot7, eval=FALSE}
+# Load packages for plotting function
+library(miaViz)
+
+# Generate RDA plot coloured by clinical status
+plotRDA(pseq, "RDA", colour_by = "Time")
+```
+
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/dbrda_plot.png)
+
+
+### 3 Hypothese testing analyses
+
+Show coefficients for the top taxa separating the groups
+ 
+```{r coef1, eval=FALSE}
+pseq <- aggregate_rare(merged_metagenomes, level = "Genus", detection = 0.1/100, prevalence = 50/100)
+pseq <- microbiome::transform(pseq, transform = "compositional")
+head(abundances(pseq))
+
+p <- plot_landscape(pseq, method = "NMDS", distance = "bray", col = "Time", size = 3)
+```
+
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/pca.png)
+
+
+### Estimating associations with an external variable
+
+Next to visualizing whether any variable is associated with differences between samples, we can also quantify the strength of the association between community composition (beta diversity) and external factors.
+
+Permutational Analysis of Variance (PERMANOVA; (2001)) is a widely used non-parametric multivariate method that aims to estimate the actual statistical significance of differences in the observed community composition between two groups of samples. This method takes as input the abundance table, which measure of distance you want to base the test on and a formula that tells the model how you think the variables are associated with each other.
+
+PERMANOVA tests the hypothesis that the centroids and dispersion of the community are equivalent between the compared groups. A p-value smaller than the significance threshold indicates that the groups have a different community composition. This method is implemented with the adonis2 function from the vegan package.
+
+```{r otu, eval=FALSE}
+
+otu <- abundances(pseq)
+meta <- meta(pseq)
+
+#head(otu)
+#head(meta)
+
+permanova <- adonis2(t(otu) ~ Time,
+                    by = "margin",
+                    data = meta, 
+                    permutations = 9999, 
+                    method = "bray")
+```
+
+P-value: 
+
+```{r pval1, eval=FALSE}
+permanova
+```
+
+The time variable is significantly associated with microbiota composition (p-value is below 0.05).
+
+Let us visualize the model coefficients for species that exhibit the largest differences between the groups. This gives some insights into how the groups tend to differ from each other in terms of community composition.
+
+
+```{r coef, eval=FALSE}
+
+# Perform dbRDA
+dbrda <- dbrda(t(otu) ~ Time, 
+               data = meta)
+sppscores(dbrda) <-t(otu)
+coef <- as.data.frame(dbrda$CCA$v) %>% select(dbRDA1)
+
+# Sort by the values of the coefficients
+sorted_coef <- coef[order((coef$dbRDA1), decreasing = TRUE), , drop = FALSE]
+
+# Select the top 10 highest and 10 lowest absolute values
+top_10_coef <- head(sorted_coef, 10)
+bottom_10_coef <- tail(sorted_coef, 10)
+
+# Combine them into one data frame
+top_and_bottom_coef <- rbind(top_10_coef, bottom_10_coef)
+
+# Display the result
+#print(top_and_bottom_coef)
+
+
+top_names <- names(top.coef)[order((top.coef), decreasing = TRUE)]
+
+top_names <- rownames(top_and_bottom_coef)
+
+
+top.coef <- top_and_bottom_coef$dbRDA1
+
+df <- data.frame(x = top.coef,
+                 y = factor((top_names), unique((top_names))))
+
+p <- ggplot(df, aes(x = x, y = y)) +
+  geom_bar(stat = "identity") +
+  labs(x = "", y= "", title = "Top Taxa") +
+  theme_bw()
+```
+
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/associations.png)
+
+**Enterococcus** (Bacillota), which plays a crucial role in metabolic adaptability against pathogenic or plant toxins and anti-herbivore defense, was found to be one of the predominant gut microorganism of lepidopteran insects, including B. mori, Helicoverpa zea, and Porthetria dispar (Paniagua Voirol et al., 2018; Zhang et al., 2022). 
+
+**Symbiopectobacterium** (Enterobacteriaceae) has recently been described for the first time as an intracellular bacterial symbiont, responsible for to the biosynthesis of vitamins and cofactors.  This bacteria may be boosting the parsite fitness, for example, by aiding in evading the Triatome immune response, or providing a novel function, such as supplementing nutrition or metabolism
+
+**Rhodococcus** (Nocardiaceae) in the triatomine gut are believed to play an important role in the metabolism of the vector, such as by participating in the synthesis of group B vitamins or by being digested by the bugs directly to provide missing nutrients (Sassera et al., 2013). Moreover, the most attractive aspect is the host-symbiont relationship between triatomines and Rhodococcus; since Rhodococcus bacteria can be easily cultured and genetically modified to harm the pathogen in vector gut, they are probably suitable tools for the control of trypanosomiasis (Sassera et al., 2013). as the blood is poor in B vitamins compared to what is generally required for insect development. The blood is poor in B vitamins compared to what is generally required for insect development, Kissing bugs, Rhodnius prolixus, notably require *Rhodococcus* bacteria for nymph development, but the addition of B vitamins in the diet can rescue nymph development in the absence of Rhodococcus  (Serrato-Salas and Gendrin 2023).
+
+**Wolbachia** (Ehrlichiaceae)  The obligate intracellular bacteria Wolbachia spp. are common in a wide range of insects, including sand flies, bed bugs, fleas and mosquitoes, and can cause reproduction alterations such as feminization, male killing and cytoplasmic incompatibility ([Landmann 20219](https://doi.org/10.1128/microbiolspec.BAI-0018-2019.)). In triatomines, Wolbachia has been solely reported for the genus Rhodnius, where it occurs in the intestine, salivary glands and gonads.
+
+**Curtobacterium** (Microbacteriaceae) *C. flaccumfaciens* is the only species of Curtobacterium associated with plant pathogenesis (Young et al., 1996), the presence of *C. flaccumfaciens* in the rhizosphere induced a systematic resistance in cucumber plants to pathogens.
+
+
+**Exercises** 
+
+Community-level comparisons: Use PERMANOVA to investigate whether the community composition differs between two groups of individuals (e.g. times, or some other grouping of your choice). You can also include covariates such as type, gut, and see how this affects the results?
+
+
+### Confounding effects
+
+Confounders can be defined as variables that are related to and affect the apparent dynamics between the response and the main independent variable. They are common in experimental studies. Generally, they can be classified into 3 groups:
+
+- Biological confounders, such as age and sex
+
+- Technical confounders produced during sample collection, processing and analysis
+
+- Confounders resulting from experimental models, such as batch effects and sample history
+
+Controlling for confounders is an important practice to reach an unbiased conclusion. To perform causal inference, it is crucial that the method is able to include confounders in the model. This is not possible with statistical tests of general use, such as the Wilcoxon test.
+
+**Exercises** 
+Try to see if the number of reads have an effect on the results? 
+
+### Network
+
+
+```{r net, eval=FALSE}
+ig <- make_network(pseq, dist.fun = "bray", max.dist = 0.3)
+
+p <- plot_network(ig, pseq, 
+             color = "Time", 
+             shape = "Gut",
+             line_weight = 0.4
+)
+```
+
+
+
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/net.png)
+
+
