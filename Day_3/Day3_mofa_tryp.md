@@ -1,4 +1,4 @@
-Diversity indices
+Mofa2
 ================
 Vincent Manzanilla, INTERTRYP
 
@@ -222,7 +222,7 @@ mofa <- prepare_mofa(mofa, model_options = model_opts)
 mofa <- run_mofa(mofa, use_basilisk = TRUE)
 ```
 
-    ## Warning in run_mofa(mofa, use_basilisk = TRUE): No output filename provided. Using /tmp/RtmpUokUDH/mofa_20240606-225736.hdf5 to store the trained model.
+    ## Warning in run_mofa(mofa, use_basilisk = TRUE): No output filename provided. Using /tmp/RtmpbU49bX/mofa_20240607-082546.hdf5 to store the trained model.
 
     ## Connecting to the mofapy2 package using basilisk. 
     ##     Set 'use_basilisk' to FALSE if you prefer to manually set the python binary using 'reticulate'.
@@ -749,7 +749,7 @@ mofa <- run_mofa(mofa, use_basilisk = TRUE)
     ## #######################
     ## 
     ## 
-    ## Saving model in /tmp/RtmpUokUDH/mofa_20240606-225736.hdf5...
+    ## Saving model in /tmp/RtmpbU49bX/mofa_20240607-082546.hdf5...
 
     ## 5 factors were found to explain no variance and they were removed for downstream analysis. You can disable this option by setting load_model(..., remove_inactive_factors = FALSE)
 

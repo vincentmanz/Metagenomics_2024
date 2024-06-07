@@ -253,6 +253,24 @@ head(tax_table(merged_metagenomes))
     ## 118060  "Enterococcus" "rotai"                      
     ## 167972  "Enterococcus" "uncultured Enterococcus sp."
 
+# How to make subset?
+
+``` r
+block_control <- phyloseq::subset_samples(merged_metagenomes, Type == "Control")
+block_cruzi <- phyloseq::subset_samples(merged_metagenomes, Type == "T._cruzi")
+block_rangeli <- phyloseq::subset_samples(merged_metagenomes, Type == "T._rangeli")
+
+block_bacteria <- phyloseq::subset_taxa(merged_metagenomes, Kingdom == "Bacteria")
+block_fungi <- phyloseq::subset_taxa(merged_metagenomes, Kingdom == "Fungi")
+block_virus <- phyloseq::subset_taxa(merged_metagenomes, Kingdom == "Viruses")
+
+# then aggregate...
+#aggregate_rare(block_virus, level = "Genus", detection = 0.1 / 100, prevalence = 50 / 100)
+
+# Then Explore.... 
+#unique(merged_metagenomes@tax_table@.Data[,"Phylum"])
+```
+
 ### Data Normalization
 
 Data transformations are common in (microbial) ecology (Legendre 2001)

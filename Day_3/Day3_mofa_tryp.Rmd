@@ -1,5 +1,5 @@
 ---
-title: "Diversity indices"
+title: "Mofa2"
 author: "Vincent Manzanilla, INTERTRYP"
 output: github_document
 ---
