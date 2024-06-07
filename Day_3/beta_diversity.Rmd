@@ -352,6 +352,12 @@ combined_plot <- wrap_plots(plot_list) +
 ![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_all.png)
 
 
+In the Shepard plot, a narrow scatter around a 1:1 line indicates a good fit of the distances to the dissimilarities, while a large scatter or a nonlinear pattern indicates a lack of fit.
+
+```{r stress}
+stressplot(nmds_spec)
+```
+
 ### 2.2 Supervised ordination
 
 dbRDA is a supervised counterpart of PCoA. It maximize the variance with respect to the covariates provided by the user. This can be used to quantify associations between each covariate and community composition (beta diversity). The table below summarizes the relations between the supervised and unsupervised ordination methods.
@@ -413,6 +419,8 @@ plotRDA(pseq, "RDA", colour_by = "Time")
 ```
 
 ![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/dbrda_plot.png)
+
+Arrow length is proportional to the degree of correlation between the environmental variable and the ordination
 
 
 ### 3 Hypothese testing analyses
