@@ -48,6 +48,24 @@ head(tax_table(merged_metagenomes))
 ```
 
 
+# How to make subset?
+
+
+```{r sub}
+block_control <- phyloseq::subset_samples(AM_metagenomes, Type == "Control")
+block_cruzi <- phyloseq::subset_samples(AM_metagenomes, Type == "T._cruzi")
+block_rangeli <- phyloseq::subset_samples(AM_metagenomes, Type == "T._rangeli")
+
+block_bacteria <- phyloseq::subset_taxa(AM_metagenomes, Kingdom == "Bacteria")
+block_fungi <- phyloseq::subset_taxa(AM_metagenomes, Kingdom == "Fungi")
+block_virus <- phyloseq::subset_taxa(AM_metagenomes, Kingdom == "Viruses")
+
+# then aggregate...
+aggregate_rare(block_virus, level = "Genus", detection = 0.1 / 100, prevalence = 50 / 100)
+
+
+```
+
 
 ### Data Normalization
 
