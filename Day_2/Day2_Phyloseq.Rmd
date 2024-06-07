@@ -94,13 +94,13 @@ For this part we are using the [phyloseq](https://joey711.github.io/phyloseq/) p
 First st your working directory: 
 
 ```{r wd}
-setwd("~/Documents/project/Metagenomics_2024/Metagenomics_2024/Day_2/")
+setwd("../Day_2/")
 ```
 
 And load your two files:
 
 ```{r data}
-merged_metagenomes <- phyloseq::import_biom("../DATA//merge_species.biom") 
+merged_metagenomes <- phyloseq::import_biom("../DATA/merge_species.biom") 
 meta <- read.csv(file = "../DATA/tryp_metadata.csv", sep = ",")
 ```
 
@@ -331,6 +331,11 @@ head(psmelt(subset_taxa(merged_metagenomes, Genus == "Homo")))
 
 #Keep only the kingdom of interest
 merged_metagenomes <- subset_taxa(merged_metagenomes, Kingdom %in% c("Archaea", "Bacteria", "Fungi", "Viruses"))
+vector_phyllum <- get_taxa_unique(merged_metagenomes, taxonomic.rank = "Phylum")
+vector_filtered <- c(vector_phyllum[1:9], vector_phyllum[11:12], vector_phyllum[14:25], vector_phyllum[28], vector_phyllum[30:44])
+merged_metagenomes <- subset_taxa(merged_metagenomes, Phylum %in% vector_filtered)
+vector_phyllum <- get_taxa_unique(merged_metagenomes, taxonomic.rank = "Phylum")
+
 ```
 
 Now recheck that your data are clean before continuing the analysis. 
@@ -364,41 +369,6 @@ ranacapa::ggrare(pseq, step = 10, color = "Sample", se = FALSE) +
 ![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/rare.png)
  ***Q: What do you observe?***
 
-### Data Normalization
-
-Data transformations are common in (microbial) ecology (Legendre 2001) and used to improve compatibility with assumptions related to specific statistical methods, mitigate biases, enhance the comparability of samples or features, or to obtain more interpretable values.
-
-Examples include the logarithmic transformation, calculation of relative abundances (percentages), and compositionality-aware transformations such as the centered log-ratio transformation (clr).
-
-Let us summarize some commonly used transformations in microbiome data science; further details and benchmarkings available in the references:
-
-- *relabundance* relative transformation; also known as total sum scaling (TSS) and compositional transformation. This converts counts into percentages (at the scale [0, 1]) that sum up to. Much of the currently available taxonomic abundance data from high-throughput assays (16S, metagenomic sequencing) is compositional by nature, even if the data is provided as counts (Gloor et al. 2017).
-
-- *clr* Centered log ratio transformation (Aitchison 1986) is used to reduce data skewness and compositionality bias in relative abundances, while bringing the data to the logarithmic scale. This transformation is frequently applied in microbial ecology (Gloor et al. 2017). However, this transformation only applies to positive values. Usual solution is to add pseudocount, which adds another type of bias in the data. The robust clr transformation (‘rclr’) aims to circumvent the need to add a pseudocount. While the resulting values from these transformations are difficult interpret directly, this transformation may enhance comparability of relative differences between samples. It is part of a broader Aitchison family of transformations; the additive log ratio transformation (`alr’) is also available. The robust clr (“rclr”) is similar to regular clr (see above) but allows data with zeroes and avoids the need to add pseudocount Martino et al. (2019). See library *compositions*. 
-
-- *pa* presence/absence transformation ignores abundances and only indicates whether the given feature is detected above the given threshold (default: 0). This simple transformation is relatively widely used in ecological research. It has shown good performance in microbiome-based classification performance (Giliberti et al. 2022, Karwowska2024).
-
-- *z* Z transformation scales data to zero mean and unit variance; this us used to bring features (or samples) to more comparable levels in terms of mean and scale of the values. This can enhance visualization and interpretation of the data
-
-- *log*, *log2*, *log10* Logarithmic transformations; used e.g. to reduce data skewness; with compositional data the clr (or rclr) transformation is often preferred.
-
-- *hellinger* Hellinger transformation equals to the square root of relative abundances. This ecological transformation can be useful if we are interested in changes in relative abundances.
-
-- *rank* Rank transformation replaces each value by its rank. Also see ‘rrank’ (relative rank transformation). This has use for instance in non-parametric statistics.
-
-- Other available transformations include Chi square (‘chi.square’), Frequency transformation (‘frequency’), and Make margin sum of squares equal to one (‘normalize’)
-
-
-The data contains read counts. We can convert these into relative abundances and other formats. Compare abundance of a given taxonomic group using the example data before and after the compositionality transformation (with a cross-plot, for instance). You can also compare the results to CLR-transformed data (see e.g. Gloor et al. 2017)
-
-Have a look at the function *?microbiome::transform*.
-
-
-```{r trans}
-microbiome::transform(merged_metagenomes, transform = "compositional")
-```
-
-In order to assess the effect of the different transformations, you can use the *clr* or the *log10* for the  downstream analysis. 
 
 ## 5. Microbiome composition
 
@@ -440,7 +410,7 @@ p <- plot_composition(pseq,
                       group_by = "Gut") +          # Group samples by the 'Time' variable
 
   # Use a color palette from the Color Brewer for filling the Family groups
-  scale_fill_brewer("Species", palette = "magma-viridis") +
+  #scale_fill_brewer("Species", palette = "magma-viridis") +
 
   # Arrange the legend items in a single column
   guides(fill = guide_legend(ncol = 1)) +

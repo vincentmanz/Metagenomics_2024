@@ -1,0 +1,555 @@
+---
+title: "Diversity indices"
+author: "Vincent Manzanilla, INTERTRYP"
+output: github_document
+---
+
+
+
+```{r lib}
+library(dplyr)
+library(tibble)
+library(microbiome)
+library(vegan)
+library(FSA)
+library(SingleCellExperiment)
+library(ggrepel)
+library(patchwork)
+```
+
+
+```{r data}
+setwd("~/Metagenomics_2024/Day_2/")
+merged_metagenomes <- phyloseq::import_biom("../DATA//merge_species.biom") 
+meta <- read.csv(file = "../DATA/tryp_metadata.csv", sep = ",")
+
+# Sort the 'meta' data frame by the 'SRA.identifier' column
+meta <- meta %>% arrange(row_number(SRA.identifier))
+
+# Associate the sorted metadata to the phyloseq object as sample data
+merged_metagenomes@sam_data <- sample_data(meta)
+
+# Extract the sample names from the 'meta' data frame
+column_name <- meta %>% pull(Sample)
+
+# Associate the extracted sample names to the phyloseq object
+sample_names(merged_metagenomes) <- column_name
+
+# Remove the unnecessary 'k_' prefix in the taxonomy data
+merged_metagenomes@tax_table@.Data <- substring(merged_metagenomes@tax_table@.Data, 4)
+
+# Rename the columns of the taxonomy table to represent taxonomic ranks
+colnames(merged_metagenomes@tax_table@.Data) <- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
+
+#Keep only the kingdom of interest
+merged_metagenomes <- subset_taxa(merged_metagenomes, Kingdom %in% c("Archaea", "Bacteria", "Fungi", "Viruses"))
+head(sample_data(merged_metagenomes))
+head(tax_table(merged_metagenomes))
+```
+
+
+
+### Data Normalization
+
+Data transformations are common in (microbial) ecology (Legendre 2001) and used to improve compatibility with assumptions related to specific statistical methods, mitigate biases, enhance the comparability of samples or features, or to obtain more interpretable values.
+
+Examples include the logarithmic transformation, calculation of relative abundances (percentages), and compositionality-aware transformations such as the centered log-ratio transformation (clr).
+
+Let us summarize some commonly used transformations in microbiome data science; further details and benchmarkings available in the references:
+
+- *relabundance* relative transformation; also known as total sum scaling (TSS) and compositional transformation. This converts counts into percentages (at the scale [0, 1]) that sum up to. Much of the currently available taxonomic abundance data from high-throughput assays (16S, metagenomic sequencing) is compositional by nature, even if the data is provided as counts (Gloor et al. 2017).
+
+- *clr* Centered log ratio transformation (Aitchison 1986) is used to reduce data skewness and compositionality bias in relative abundances, while bringing the data to the logarithmic scale. This transformation is frequently applied in microbial ecology (Gloor et al. 2017). However, this transformation only applies to positive values. Usual solution is to add pseudocount, which adds another type of bias in the data. The robust clr transformation (‘rclr’) aims to circumvent the need to add a pseudocount. While the resulting values from these transformations are difficult interpret directly, this transformation may enhance comparability of relative differences between samples. It is part of a broader Aitchison family of transformations; the additive log ratio transformation (`alr’) is also available. The robust clr (“rclr”) is similar to regular clr (see above) but allows data with zeroes and avoids the need to add pseudocount Martino et al. (2019). See library *compositions*. 
+
+- *pa* presence/absence transformation ignores abundances and only indicates whether the given feature is detected above the given threshold (default: 0). This simple transformation is relatively widely used in ecological research. It has shown good performance in microbiome-based classification performance (Giliberti et al. 2022, Karwowska2024).
+
+- *z* Z transformation scales data to zero mean and unit variance; this us used to bring features (or samples) to more comparable levels in terms of mean and scale of the values. This can enhance visualization and interpretation of the data
+
+- *log*, *log2*, *log10* Logarithmic transformations; used e.g. to reduce data skewness; with compositional data the clr (or rclr) transformation is often preferred.
+
+- *hellinger* Hellinger transformation equals to the square root of relative abundances. This ecological transformation can be useful if we are interested in changes in relative abundances.
+
+- *rank* Rank transformation replaces each value by its rank. Also see ‘rrank’ (relative rank transformation). This has use for instance in non-parametric statistics.
+
+- Other available transformations include Chi square (‘chi.square’), Frequency transformation (‘frequency’), and Make margin sum of squares equal to one (‘normalize’)
+
+
+The data contains read counts. We can convert these into relative abundances and other formats. Compare abundance of a given taxonomic group using the example data before and after the compositionality transformation (with a cross-plot, for instance). You can also compare the results to CLR-transformed data (see e.g. Gloor et al. 2017)
+
+Have a look at the function *?microbiome::transform*.
+
+
+```{r trans1}
+
+pseq <- microbiome::aggregate_rare(merged_metagenomes, level = "Species", detection = 0.05/100, prevalence = 20/100)
+
+
+set.seed(34521)
+
+# Read count
+pseq_read  <- abundances(pseq) %>% as.data.frame()  
+pseq_read <- pseq_read[order(rowSums(pseq_read), decreasing = TRUE), ] %>% t()
+# Calculate distance matrix
+pseq_comp <- vegdist(pseq_read, method = "bray")
+# Perform NMDS on distance matrix
+nmds_spec <- metaMDS(pseq_read, distance = "bray",k = 2)
+# Extract and reshape the data to plot ordination as ggplot  and add the metadata
+# Convert the NMDS points to a data frame
+nmds_spec_gg <- as.data.frame(nmds_spec$points)
+# Add the "Sample" column based on row names
+nmds_spec_gg <- nmds_spec_gg %>% rownames_to_column("Sample")
+# Merge the NMDS data with the metadata by the "Sample" column
+merged_data <- dplyr::left_join(meta, nmds_spec_gg, by = "Sample")
+plt_read <- ggplot(merged_data, aes(x = MDS1, y = MDS2)) +
+  geom_point(aes(color = Time), size = 3, alpha = 0.5) +
+  geom_text_repel(aes(label = Type), size = 3, color = "black") +
+  ggtitle("Read count") +
+  theme_minimal()
+#plt_read
+
+
+# abundances
+pseq_comp <- microbiome::transform(pseq, transform = "compositional")
+pseq_comp  <- abundances(pseq_comp) %>% as.data.frame()  
+pseq_comp <- pseq_comp[order(rowSums(pseq_comp), decreasing = TRUE), ] %>% t()
+# Calculate distance matrix
+pseq_comp <- vegdist(pseq_comp, method = "bray")
+# Perform NMDS on distance matrix
+nmds_spec <- metaMDS(pseq_comp, distance = "bray",k = 2)
+# Extract and reshape the data to plot ordination as ggplot  and add the metadata
+# Convert the NMDS points to a data frame
+nmds_spec_gg <- as.data.frame(nmds_spec$points)
+# Add the "Sample" column based on row names
+nmds_spec_gg <- nmds_spec_gg %>% rownames_to_column("Sample")
+# Merge the NMDS data with the metadata by the "Sample" column
+merged_data <- dplyr::left_join(meta, nmds_spec_gg, by = "Sample")
+plt_comp <- ggplot(merged_data, aes(x = MDS1, y = MDS2)) +
+  geom_point(aes(color = Time), size = 3, alpha = 0.5) +
+  geom_text_repel(aes(label = Type), size = 3, color = "black") +
+  ggtitle("Compositional") +
+  theme_minimal()
+#plt_comp
+
+# clr
+pseq_clr <- microbiome::transform(pseq, transform = "clr")
+pseq_clr  <- abundances(pseq_clr) %>% as.data.frame()  
+pseq_clr <- pseq_clr[order(rowSums(pseq_clr), decreasing = TRUE), ] %>% t()
+# Calculate distance matrix
+pseq_clr <- vegdist(pseq_clr, method = "euclidian")
+# Perform NMDS on distance matrix
+nmds_spec <- metaMDS(pseq_clr, distance = "bray",k = 2)
+# Extract and reshape the data to plot ordination as ggplot  and add the metadata
+# Convert the NMDS points to a data frame
+nmds_spec_gg <- as.data.frame(nmds_spec$points)
+# Add the "Sample" column based on row names
+nmds_spec_gg <- nmds_spec_gg %>% rownames_to_column("Sample")
+# Merge the NMDS data with the metadata by the "Sample" column
+merged_data <- dplyr::left_join(meta, nmds_spec_gg, by = "Sample")
+plt_clr <- ggplot(merged_data, aes(x = MDS1, y = MDS2)) +
+  geom_point(aes(color = Time), size = 3, alpha = 0.5) +
+  geom_text_repel(aes(label = Type), size = 3, color = "black") +
+  ggtitle("CLR") +
+  theme_minimal()
+#plt_clr
+
+
+# Z
+pseq_z <- microbiome::transform(pseq, transform = "Z")
+pseq_z  <- abundances(pseq_z) %>% as.data.frame()  
+pseq_z <- pseq_z[order(rowSums(pseq_z), decreasing = TRUE), ] %>% t()
+# Calculate distance matrix
+pseq_clr <- vegdist(pseq_z, method = "euclidian")
+# Perform NMDS on distance matrix
+nmds_spec <- metaMDS(pseq_clr, distance = "bray",k = 2)
+# Extract and reshape the data to plot ordination as ggplot  and add the metadata
+# Convert the NMDS points to a data frame
+nmds_spec_gg <- as.data.frame(nmds_spec$points)
+# Add the "Sample" column based on row names
+nmds_spec_gg <- nmds_spec_gg %>% rownames_to_column("Sample")
+# Merge the NMDS data with the metadata by the "Sample" column
+merged_data <- dplyr::left_join(meta, nmds_spec_gg, by = "Sample")
+plt_z <- ggplot(merged_data, aes(x = MDS1, y = MDS2)) +
+  geom_point(aes(color = Time), size = 3, alpha = 0.5) +
+  geom_text_repel(aes(label = Type), size = 3, color = "black") +
+  ggtitle("Z") +
+  theme_minimal()
+#plt_z
+```
+
+```{r plot1, eval=TRUE}
+list_plot <- list(plt_comp, plt_clr, plt_z, plt_read)
+# Combine all plots using patchwork
+combined_plot <- wrap_plots(list_plot) +
+  plot_layout(guides = "collect")
+print(combined_plot)
+```
+
+
+**Q: Which normalization is the best?**
+
+## 2 Beta diversity
+
+Beta diversity quantifies the dissimilarity between communities (multiple samples), as opposed to alpha diversity which focuses on variation within a community (one sample). In microbiome research, commonly used metrics of beta diversity include the Bray-Curtis index (for compositional data), Jaccard index (for presence/absence data, ignoring abundance information), Aitchison distance (Euclidean distance for clr transformed abundances, aiming to avoid the compositionality bias), and the Unifrac distance (that takes into account the phylogenetic tree information). Notably, only some of these measures are actual distances, as this is a mathematical concept whose definition is not satisfied by certain ecological measure, such as the Bray-Curtis index. Therefore, the terms dissimilarity and beta diversity are preferred.
+
+| Method description             | Assay type          | Beta diversity metric |
+|--------------------------------|---------------------|-----------------------|
+| Quantitative profiling         | Absolute counts     | Bray-Curtis           |
+| Relative profiling             | Relative abundances | Bray-Curtis           |
+| Aitchison distance             | Absolute counts     | **Aitchison**             |
+| Aitchison distance             | clr                 | Euclidean             |
+| Robust Aitchison distance      | rclr                | Euclidean             |
+| Presence/Absence similarity    | Relative abundances | **Jaccard**               |
+| Presence/Absence similarity    | Absolute counts     | **Jaccard**               |
+| Phylogenetic distance          | Rarefied counts     | Unifrac               |
+
+In practice, beta diversity is usually represented as a *dist* object, a triangular matrix where the distance between each pair of samples is encoded by a specific cell. This distance matrix can then undergo ordination, which is an important ecological tool to reduce the dimensionality of data for a more efficient analysis and visualization. Ordination techniques aim to capture as much essential information from the data as possible and turn it into a lower dimensional representation. Dimension reduction is bound to lose information but commonly used ordination techniques can preserve relevant information of sample similarities in an optimal way, which is defined in different ways by different methods.
+
+Based on the type of algorithm, ordination methods in microbiome research can be generally divided in two categories: unsupervised and supervised ordination. The former includes Principal Coordinate Analysis (PCoA), Principal Component Analysis (PCA) and Uniform Manifold Approximation and Projection for Dimension Reduction (UMAP), whereas the latter is mainly represented by distance-based Redundancy Analysis (dbRDA). We will first discuss unsupervised ordination methods and then proceed to supervised ones.
+
+
+### 2.1 Unsupervised ordination
+
+Unsupervised ordination methods variation in the data without additional information on covariates or other supervision of the model. Among the different approaches, Multi-Dimensional Scaling (MDS) and non-metric MDS (NMDS) can be regarded as the standard. They are jointly referred to as PCoA. 
+
+A typical comparison of community compositions starts with a visual representation of the groups by a 2D ordination. Then we estimate relative abundances and MDS ordination based on Bray-Curtis index between the groups, and visualize the results.
+
+```{r unsup}
+# To ensure reproducibility we can fix the seed here. This will ensure you always get the same result each time you run your data.
+set.seed(34521)
+
+pseq <- aggregate_rare(merged_metagenomes, level = "Genus", detection = 0.1/100, prevalence = 50/100)
+pseq <- microbiome::transform(pseq, transform = "compositional")
+# abundances(pseq)
+pseq  <- abundances(pseq) %>% as.data.frame() 
+pseq <- pseq <- pseq[order(rowSums(pseq), decreasing = TRUE), ] %>% t()
+
+# Calculate distance matrix
+species_frac_filtered_dist <- vegdist(pseq, method = "bray")
+
+# Perform NMDS on distance matrix
+nmds_spec <- metaMDS(species_frac_filtered_dist, distance = "bray",k = 2)
+```
+
+Check the output. 
+
+```{r check}
+# Check the output
+nmds_spec
+```
+Here you see a kind of summary of the analysis. For example, you can see that you used 2 dimensions and the stress was approx. 0.03. In general if a stress is above 0.2 then the clustering is not reliably representing the data and should be interpreted with caution. But here the stress is below 0.2, so we are okay.
+
+Now let’s look at the ordination. To plot the data with ggplot, we need to extract the coordinaties of each point from nmds_spec$points.
+
+```{r extract}
+# Extract and reshape the data to plot ordination as ggplot  and add the metadata
+# Convert the NMDS points to a data frame
+nmds_spec_gg <- as.data.frame(nmds_spec$points)
+
+# Add the "Sample" column based on row names
+nmds_spec_gg <- nmds_spec_gg %>% rownames_to_column("Sample")
+
+# Merge the NMDS data with the metadata by the "Sample" column
+merged_data <- dplyr::left_join(meta, nmds_spec_gg, by = "Sample")
+```
+Then we can create the plot easily and color according to the metadata. We are choosing timepoint and mocktreat for the coloring respectively. But feel free to explore other parameters.
+
+```{r plot5, eval=FALSE}
+ggplot(merged_data, aes(x = MDS1, y = MDS2)) +
+    geom_point(aes(color = Time), size = 3, alpha = 0.5) +
+    geom_text_repel(aes(label = Type), size = 3, color = "black") +
+    ggtitle("NMDS colored according to Time") +
+    theme_minimal()
+
+```
+
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_time.png)
+
+```{r plot6, eval=FALSE}
+ggplot(merged_data, aes(x = MDS1, y = MDS2)) +
+    geom_point(aes(color = Reads), size = 3, alpha = 0.5) +
+    geom_text_repel(aes(label = Time), size = 3, color = "black") +
+    scale_color_continuous(name = "Reads") +  # Add a continuous color scale
+    ggtitle("NMDS colored according to Reads numbers") +
+    theme_minimal()
+
+```
+
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_reads.png)
+
+A few combinations of beta diversity metrics and assay types are typically used. For instance, Bray-Curtis dissimilarity and Euclidean distance are often applied to the relative abundance and the clr assays, respectively. Besides beta diversity metric and assay type, the PCoA algorithm is also a variable that should be considered. Below, we show how the choice of these three factors can affect the resulting lower-dimensional data.
+
+
+
+```{r nmds}
+# Run NMDS on relabundance assay with Bray-Curtis distances
+pseq <- aggregate_rare(merged_metagenomes, level = "Genus", detection = 0.1/100, prevalence = 50/100)
+pseq <- microbiome::transform(pseq, transform = "compositional")
+# abundances(pseq)
+pseq  <- abundances(pseq) %>% as.data.frame() 
+pseq <- pseq <- pseq[order(rowSums(pseq), decreasing = TRUE), ] %>% t()
+# Calculate distance matrix
+species_frac_filtered_dist_bray <- vegdist(pseq, method = "bray")
+# Perform NMDS on distance matrix
+nmds_spec_comp_bray <- metaMDS(species_frac_filtered_dist_bray,distance = "bray",k = 2)
+
+# Run NMDS on compositional assay with Euclidean distances
+# Calculate distance matrix
+species_frac_filtered_dist_euclidean <- vegdist(pseq, method = "euclidean")
+# Perform NMDS on distance matrix
+nmds_spec_comp_euclidean <- metaMDS(species_frac_filtered_dist_euclidean,distance = "euclidean",k = 2)
+
+# Run NMDS on compositional assay with Aitchison distances
+# Calculate distance matrix
+species_frac_filtered_dist_aitchison <- vegdist(pseq, method = "robust.aitchison")
+# Perform NMDS on distance matrix
+nmds_spec_comp_aitchison <- metaMDS(species_frac_filtered_dist_aitchison,distance = "robust.aitchison",k = 2)
+
+# Run NMDS on clr assay with Euclidean distances
+pseq <- aggregate_rare(merged_metagenomes, level = "Genus", detection = 0.1/100, prevalence = 50/100)
+pseq <- microbiome::transform(pseq, transform = "clr")
+pseq  <- abundances(pseq) %>% as.data.frame() 
+pseq <- pseq <- pseq[order(rowSums(pseq), decreasing = TRUE), ] %>% t()
+# Calculate distance matrix
+species_frac_filtered_dist_euclidean <- vegdist(pseq, method = "euclidean")
+# Perform NMDS on distance matrix
+nmds_spec_clr_euclidean <- metaMDS(species_frac_filtered_dist_euclidean,distance = "euclidean",k = 2)
+
+# List of NMDS objects and their corresponding titles
+nmds_list <- list(
+  list(data = nmds_spec_comp_bray, title = "Comp Bray"),
+  list(data = nmds_spec_comp_euclidean, title = "Comp Euclidean"),
+  list(data = nmds_spec_comp_aitchison, title = "Comp Aitchison"),
+  list(data = nmds_spec_clr_euclidean, title = "Clr Euclidean")
+)
+
+# Initialize an empty list to store plots
+plot_list <- list()
+
+# Loop through each NMDS object and generate the corresponding plot
+for (nmds_item in nmds_list) {
+  nmds_spec_gg <- as.data.frame(nmds_item$data$points) %>%
+    rownames_to_column("Sample") %>%
+    dplyr::left_join(meta, by = "Sample")
+  
+  plot <- ggplot(nmds_spec_gg, aes(x = MDS1, y = MDS2)) +
+    geom_point(aes(color = Time), size = 3, alpha = 0.5) +
+    geom_text_repel(aes(label = Type), size = 3, color = "black") +
+    ggtitle(paste("NMDS colored according to Time -", nmds_item$title)) +
+    theme_minimal()
+  
+  # Add the plot to the plot list
+  plot_list[[nmds_item$title]] <- plot
+}
+
+# Combine all plots using patchwork
+combined_plot <- wrap_plots(plot_list) +
+  plot_layout(guides = "collect")
+
+# Print the combined plot
+#print(combined_plot)
+```
+
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/nmds_all.png)
+
+
+### 2.2 Supervised ordination
+
+dbRDA is a supervised counterpart of PCoA. It maximize the variance with respect to the covariates provided by the user. This can be used to quantify associations between each covariate and community composition (beta diversity). The table below summarizes the relations between the supervised and unsupervised ordination methods.
+
+| Supervised ordination  | Unsupervised ordination          |
+|------------------------|----------------------------------|
+| Euclidean distance     | RDA                              | PCA                         |
+| Non-Euclidean distance | dbRDA                            | PCoA/MDS, NMDS, UMAP        |
+
+
+In summary, the dbRDA is the more general method that allows a wider variety dissimilarity, or beta diversity, indices. 
+
+We are using the package mia for this analysis, fist we transform our phyloseq object into a mia compatible object. The colData lists the covariates such as Gut and Type...
+
+```{r mia}
+pseq <-  mia::makeTreeSummarizedExperimentFromPhyloseq(merged_metagenomes)
+
+# Apply relative transform
+pseq <- mia::transformAssay(pseq,
+                       method = "relabundance")
+```
+
+dbRDA can be perfomed with the runRDA function. In addition to the arguments previously defined for unsupervised ordination, this function takes a formula to control for variables and an action to treat missing values. Along with metadata, which is the main outcome,we can treat observations missing values (not the case here). 
+
+```{r mia1}
+pseq <- mia::runRDA(pseq,
+               assay.type = "relabundance",
+               formula = assay ~ Gut + Time + Type + Reads,
+               distance = "bray",
+               na.action = na.exclude)
+```
+
+The importance of each variable on the similarity between samples can be assessed from the results of PERMANOVA, automatically provided by the runRDA function. We see that Time explain more than 42% of the variance and it is also significant.
+
+```{r rda}
+# Store results of PERMANOVA test
+rda_info <- attr(reducedDim(pseq, "RDA"), "significance")
+rda_info$permanova
+```
+
+|          | Df | SumOfSqs |         F |  Pr(>F) | Total variance | Explained variance |
+|----------|----|----------|-----------|---------|----------------|-------------------|
+| Model    |  8 | 2.989475 | 13.067070 |   0.001 |       3.590021 |         0.832718  |
+| Gut      |  1 | 0.038869 |  1.359164 |   0.237 |       3.590021 |         0.010827  |
+| Time     |  4 | 1.512583 | 13.223075 |   0.001 |       3.590021 |         0.421330  |
+| Type     |  2 | 0.053880 |  0.942050 |   0.405 |       3.590021 |         0.015008  |
+| Reads    |  1 | 0.052313 |  1.829298 |   0.163 |       3.590021 |         0.014572  |
+| Residual | 21 | 0.600546 |     NA    |     NA  |       3.590021 |         0.167282  |
+
+
+Next, we proceed to visualize the weight and significance of each variable on the similarity between samples with an RDA plot, which can be generated with the plotRDA function from the miaViz package.
+
+```{r plot7, eval=FALSE}
+# Load packages for plotting function
+library(miaViz)
+
+# Generate RDA plot coloured by clinical status
+plotRDA(pseq, "RDA", colour_by = "Time")
+```
+
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/dbrda_plot.png)
+
+
+### 3 Hypothese testing analyses
+
+Show coefficients for the top taxa separating the groups
+ 
+```{r coef1, eval=FALSE}
+pseq <- aggregate_rare(merged_metagenomes, level = "Genus", detection = 0.1/100, prevalence = 50/100)
+pseq <- microbiome::transform(pseq, transform = "compositional")
+head(abundances(pseq))
+
+p <- plot_landscape(pseq, method = "NMDS", distance = "bray", col = "Time", size = 3)
+```
+
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/pca.png)
+
+
+### Estimating associations with an external variable
+
+Next to visualizing whether any variable is associated with differences between samples, we can also quantify the strength of the association between community composition (beta diversity) and external factors.
+
+Permutational Analysis of Variance (PERMANOVA; (2001)) is a widely used non-parametric multivariate method that aims to estimate the actual statistical significance of differences in the observed community composition between two groups of samples. This method takes as input the abundance table, which measure of distance you want to base the test on and a formula that tells the model how you think the variables are associated with each other.
+
+PERMANOVA tests the hypothesis that the centroids and dispersion of the community are equivalent between the compared groups. A p-value smaller than the significance threshold indicates that the groups have a different community composition. This method is implemented with the adonis2 function from the vegan package.
+
+```{r otu, eval=FALSE}
+
+otu <- abundances(pseq)
+meta <- meta(pseq)
+
+#head(otu)
+#head(meta)
+
+permanova <- adonis2(t(otu) ~ Time,
+                    by = "margin",
+                    data = meta, 
+                    permutations = 9999, 
+                    method = "bray")
+```
+
+P-value: 
+
+```{r pval1, eval=FALSE}
+permanova
+```
+
+The time variable is significantly associated with microbiota composition (p-value is below 0.05).
+
+Let us visualize the model coefficients for species that exhibit the largest differences between the groups. This gives some insights into how the groups tend to differ from each other in terms of community composition.
+
+
+```{r coef, eval=FALSE}
+
+# Perform dbRDA
+dbrda <- dbrda(t(otu) ~ Time, 
+               data = meta)
+sppscores(dbrda) <-t(otu)
+coef <- as.data.frame(dbrda$CCA$v) %>% select(dbRDA1)
+
+# Sort by the values of the coefficients
+sorted_coef <- coef[order((coef$dbRDA1), decreasing = TRUE), , drop = FALSE]
+
+# Select the top 10 highest and 10 lowest absolute values
+top_10_coef <- head(sorted_coef, 10)
+bottom_10_coef <- tail(sorted_coef, 10)
+
+# Combine them into one data frame
+top_and_bottom_coef <- rbind(top_10_coef, bottom_10_coef)
+
+# Display the result
+#print(top_and_bottom_coef)
+
+
+top_names <- names(top.coef)[order((top.coef), decreasing = TRUE)]
+
+top_names <- rownames(top_and_bottom_coef)
+
+
+top.coef <- top_and_bottom_coef$dbRDA1
+
+df <- data.frame(x = top.coef,
+                 y = factor((top_names), unique((top_names))))
+
+p <- ggplot(df, aes(x = x, y = y)) +
+  geom_bar(stat = "identity") +
+  labs(x = "", y= "", title = "Top Taxa") +
+  theme_bw()
+```
+
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/associations.png)
+
+**Enterococcus** (Bacillota), which plays a crucial role in metabolic adaptability against pathogenic or plant toxins and anti-herbivore defense, was found to be one of the predominant gut microorganism of lepidopteran insects, including B. mori, Helicoverpa zea, and Porthetria dispar (Paniagua Voirol et al., 2018; Zhang et al., 2022). 
+
+**Symbiopectobacterium** (Enterobacteriaceae) has recently been described for the first time as an intracellular bacterial symbiont, responsible for to the biosynthesis of vitamins and cofactors.  This bacteria may be boosting the parsite fitness, for example, by aiding in evading the Triatome immune response, or providing a novel function, such as supplementing nutrition or metabolism
+
+**Rhodococcus** (Nocardiaceae) in the triatomine gut are believed to play an important role in the metabolism of the vector, such as by participating in the synthesis of group B vitamins or by being digested by the bugs directly to provide missing nutrients (Sassera et al., 2013). Moreover, the most attractive aspect is the host-symbiont relationship between triatomines and Rhodococcus; since Rhodococcus bacteria can be easily cultured and genetically modified to harm the pathogen in vector gut, they are probably suitable tools for the control of trypanosomiasis (Sassera et al., 2013). as the blood is poor in B vitamins compared to what is generally required for insect development. The blood is poor in B vitamins compared to what is generally required for insect development, Kissing bugs, Rhodnius prolixus, notably require *Rhodococcus* bacteria for nymph development, but the addition of B vitamins in the diet can rescue nymph development in the absence of Rhodococcus  (Serrato-Salas and Gendrin 2023).
+
+**Wolbachia** (Ehrlichiaceae)  The obligate intracellular bacteria Wolbachia spp. are common in a wide range of insects, including sand flies, bed bugs, fleas and mosquitoes, and can cause reproduction alterations such as feminization, male killing and cytoplasmic incompatibility ([Landmann 20219](https://doi.org/10.1128/microbiolspec.BAI-0018-2019.)). In triatomines, Wolbachia has been solely reported for the genus Rhodnius, where it occurs in the intestine, salivary glands and gonads.
+
+**Curtobacterium** (Microbacteriaceae) *C. flaccumfaciens* is the only species of Curtobacterium associated with plant pathogenesis (Young et al., 1996), the presence of *C. flaccumfaciens* in the rhizosphere induced a systematic resistance in cucumber plants to pathogens.
+
+
+**Exercises** 
+
+Community-level comparisons: Use PERMANOVA to investigate whether the community composition differs between two groups of individuals (e.g. times, or some other grouping of your choice). You can also include covariates such as type, gut, and see how this affects the results?
+
+
+### Confounding effects
+
+Confounders can be defined as variables that are related to and affect the apparent dynamics between the response and the main independent variable. They are common in experimental studies. Generally, they can be classified into 3 groups:
+
+- Biological confounders, such as age and sex
+
+- Technical confounders produced during sample collection, processing and analysis
+
+- Confounders resulting from experimental models, such as batch effects and sample history
+
+Controlling for confounders is an important practice to reach an unbiased conclusion. To perform causal inference, it is crucial that the method is able to include confounders in the model. This is not possible with statistical tests of general use, such as the Wilcoxon test.
+
+**Exercises** 
+Try to see if the number of reads have an effect on the results? 
+
+### Network
+
+
+```{r net, eval=FALSE}
+ig <- make_network(pseq, dist.fun = "bray", max.dist = 0.3)
+
+p <- plot_network(ig, pseq, 
+             color = "Time", 
+             shape = "Gut",
+             line_weight = 0.4
+)
+```
+
+
+
+![](https://github.com/vincentmanz/Metagenomics_2024/blob/main/Day_2/img/net.png)
+
+
